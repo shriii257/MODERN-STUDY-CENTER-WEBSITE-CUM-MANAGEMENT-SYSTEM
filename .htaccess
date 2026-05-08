@@ -1,0 +1,26 @@
+# EKAGRA ABHYASIKA — .htaccess
+# InfinityFree / Apache compatible
+
+Options -Indexes
+
+# Protect sensitive files
+<FilesMatch "(db\.php|\.sql|\.env|README\.md)$">
+  Order Allow,Deny
+  Deny from all
+</FilesMatch>
+
+# Allow includes to be accessed only by PHP
+<FilesMatch "^_">
+  Order Allow,Deny
+  Deny from all
+</FilesMatch>
+
+# PHP settings (InfinityFree compatible subset)
+php_flag display_errors Off
+php_value session.gc_maxlifetime 7200
+
+# Prevent direct access to includes folder
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^includes/ - [F,L]
+</IfModule>
