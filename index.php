@@ -313,15 +313,15 @@ $available  = $totalSeats - $occupied;
           <div class="contact-info-icon"><i class="fab fa-whatsapp"></i></div>
           <div>
             <h6>WhatsApp / Call</h6>
-            <p><a href="tel:+919999999999" style="color:var(--accent);text-decoration:none;font-weight:700;">+91 99999 99999</a></p>
+            <p><a href="tel:+919579089287" style="color:var(--accent);text-decoration:none;font-weight:700;">+91 95790 89287</a></p>
           </div>
         </div>
 
         <div class="d-flex gap-3 mt-4">
-          <a href="tel:+919999999999" class="btn btn-accent" style="flex:1;text-align:center;">
+          <a href="tel:+919579089287" class="btn btn-accent" style="flex:1;text-align:center;">
             <i class="fas fa-phone me-2"></i>Call Now
           </a>
-          <a href="https://wa.me/919999999999?text=Hello%2C+I+want+to+know+about+Ekagra+Abhyasika" target="_blank"
+          <a href="https://wa.me/919579089287?text=Hello%2C+I+want+to+know+about+Ekagra+Abhyasika" target="_blank"
              class="btn" style="flex:1;text-align:center;background:#25d366;color:#fff;">
             <i class="fab fa-whatsapp me-2"></i>WhatsApp
           </a>
@@ -391,11 +391,11 @@ $available  = $totalSeats - $occupied;
 
 <!-- Floating Buttons -->
 <div class="floating-btns">
-  <a href="https://wa.me/919999999999?text=Hello%2C+I+want+to+know+about+Ekagra+Abhyasika"
+  <a href="https://wa.me/919579089287?text=Hello%2C+I+want+to+know+about+Ekagra+Abhyasika"
      target="_blank" class="float-btn wa" title="WhatsApp Us">
     <i class="fab fa-whatsapp"></i>
   </a>
-  <a href="tel:+919999999999" class="float-btn call" title="Call Us">
+  <a href="tel:+919579089287" class="float-btn call" title="Call Us">
     <i class="fas fa-phone"></i>
   </a>
 </div>

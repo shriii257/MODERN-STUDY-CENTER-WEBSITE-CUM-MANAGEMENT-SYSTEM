@@ -21,16 +21,18 @@ if (ob_get_level() === 0) {
 }
 
 // ---------------- DATABASE CONFIG ----------------
-define('DB_HOST',    'sql201.infinityfree.com');
-define('DB_NAME',    'if0_41864563_ekagra_db');
-define('DB_USER',    'if0_41864563');
-define('DB_PASS',    'oKomeUDESQyC2lq');
-define('DB_CHARSET', 'utf8mb4');
+$env = parse_ini_file(__DIR__ . '/../.env');
+
+define('DB_HOST',    $env['DB_HOST']);
+define('DB_NAME',    $env['DB_NAME']);
+define('DB_USER',    $env['DB_USER']);
+define('DB_PASS',    $env['DB_PASS']);
+define('DB_CHARSET', $env['DB_CHARSET']);
 
 // ---------------- WEBSITE CONFIG ----------------
 define('SITE_NAME',   'Ekagra Abhyasika');
 define('SITE_URL',    'https://ekagraabhyasika.great-site.net');
-define('ADMIN_PHONE', '917000000000');
+define('ADMIN_PHONE', '9579089287');
 
 // ============================================================
 // PDO CONNECTION

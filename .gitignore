@@ -1,0 +1,6 @@
+.env
+*.sql
+sessions/
+uploads/
+.vscode/
+*.log
