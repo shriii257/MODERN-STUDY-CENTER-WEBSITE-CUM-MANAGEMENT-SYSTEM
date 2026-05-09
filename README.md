@@ -1,97 +1,72 @@
-# EKAGRA ABHYASIKA — Study Room Management System
+# EKAGRA ABHYASIKA
 
-A modern PHP + MySQL based Study Room / Library Management System designed for managing students, seats, payments, renewals, and reports efficiently.
+A modern Study Room / Library Management System built using PHP and MySQL.
+
+This project helps study rooms and libraries manage:
+
+* Students
+* Seats
+* Monthly payments
+* Membership renewals
+* Reports
+* Student dashboards
 
 ---
 
-# 🌐 Live Website
+# 🌐 Live Demo
 
-### Main Website
+### Website
 
-[EKAGRA ABHYASIKA Official Website](https://ekagraabhyasika.great-site.net/
-
+[EKAGRA ABHYASIKA Website](https://ekagraabhyasika.great-site.net/)
 
 ### Admin Login
 
-[Admin Login Panel](https://ekagraabhyasika.great-site.net/admin/login.php
-
-
----
-
-# 📌 About the Project
-
-EKAGRA ABHYASIKA is a complete management solution for study rooms and libraries.
-It helps administrators manage:
-
-* Student registrations
-* Seat allocation
-* Monthly fee collection
-* Reserved & unreserved seating
-* Renewal tracking
-* Reports & analytics
-* Student self-service portal
-
-The system is lightweight, responsive, beginner-friendly, and compatible with free hosting services like InfinityFree.
+[Admin Panel Login](https://ekagraabhyasika.great-site.net/admin/login.php)
 
 ---
 
 # 🚀 Features
 
-## 👨‍💼 Admin Features
+## Admin Features
 
-* Secure admin authentication
-* Student management (Add / Edit / Delete)
-* Visual seat management system
-* Payment & renewal tracking
-* Revenue reports
-* Global search functionality
+* Admin authentication
+* Student management system
+* Seat allocation system
+* Reserved & unreserved seats
+* Payment management
+* Renewal alerts
+* Reports dashboard
+* Global student search
 * Password change system
-* Dashboard with analytics & charts
 
-### Admin Pages
+## Student Features
 
-* [Students Management](https://ekagraabhyasika.great-site.net/admin/students.php?utm_source=chatgpt.com)
-* [Seat Management](https://ekagraabhyasika.great-site.net/admin/seats.php?utm_source=chatgpt.com)
-* [Payments Management](https://ekagraabhyasika.great-site.net/admin/payments.php?utm_source=chatgpt.com)
-* [Reports Dashboard](https://ekagraabhyasika.great-site.net/admin/reports.php?utm_source=chatgpt.com)
-* [Global Search](https://ekagraabhyasika.great-site.net/admin/search.php?utm_source=chatgpt.com)
-* [Change Password](https://ekagraabhyasika.great-site.net/admin/change_password.php?utm_source=chatgpt.com)
-
----
-
-## 👨‍🎓 Student Features
-
-Students can:
-
-* Login using mobile number and password
+* Student login portal
 * View seat details
-* Check membership expiry
-* View payment history
-* Access study room rules & timings
+* Membership expiry tracking
+* Payment history
+* Study room rules & timings
 
 ---
 
-# 🛠️ Tech Stack
+# 🛠️ Technologies Used
 
 * PHP
 * MySQL
 * HTML5
 * CSS3
 * JavaScript
-* PDO (Secure Database Queries)
+* PDO
 
 ---
 
 # 📁 Project Structure
 
 ```text
-ekagra_abhyasika/
-│
-├── admin/         → Admin panel
-├── student/       → Student portal
-├── includes/      → Database & shared files
-├── assets/        → CSS & JavaScript
-└── index.php      → Homepage
+admin/      → Admin panel
+student/    → Student portal
+includes/   → Database connection & shared files
+assets/     → CSS & JavaScript files
 ```
 
 ---
@@ -101,46 +76,35 @@ ekagra_abhyasika/
 * PDO Prepared Statements
 * Password Hashing
 * Session Authentication
-* XSS Protection using `htmlspecialchars()`
-* Separate Admin & Student Sessions
+* XSS Protection
 
 ---
 
-# 💺 Seat System
+# 💺 Seat Structure
 
 | Type       | Seats    |
 | ---------- | -------- |
 | Reserved   | 1 – 76   |
 | Unreserved | 77 – 108 |
 
-Reserved seats include additional reservation benefits.
-
 ---
 
-# 💰 Fee Structure
 
-| Fee Type         | Amount |
-| ---------------- | ------ |
-| Monthly Fee      | ₹1800  |
-| Reservation Fee  | ₹100   |
-| Registration Fee | ₹100   |
-| Security Deposit | ₹300   |
 
 ---
 
 # ⚙️ Installation
 
-1. Upload files to hosting
-2. Create MySQL database
-3. Import SQL file
-4. Configure database credentials
-5. Open website
+1. Clone the repository
+2. Import database SQL file
+3. Configure database credentials
+4. Run on XAMPP or hosting server
 
 ---
 
-# 📌 Hosting Compatibility
+# 📌 Hosting
 
-Tested on:
+Compatible with:
 
 * InfinityFree
 * XAMPP
@@ -151,31 +115,16 @@ Tested on:
 # 📍 Location
 
 Ekagra Abhyasika
-City Center Complex, 3rd Floor, Office 304, Undri, Pune
+Undri, Pune, Maharashtra
 
 ---
 
-# 👨‍💻 Developer Notes
+# 👨‍💻 Developed By
 
-This project was developed as a modern and practical study room management solution with focus on:
-
-* simplicity
-* clean UI
-* performance
-* easy deployment
-
----
-
-# ⭐ Future Improvements
-
-* SMS Notifications
-* Online Payments
-* Attendance Tracking
-* QR Code Entry
-* Mobile App Integration
+S.R.BIRADAR
 
 ---
 
 # 📜 License
 
-This project is for educational and commercial learning purposes.
+This project is for educational and learning purposes.
