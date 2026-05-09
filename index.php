@@ -71,6 +71,7 @@ $available  = $totalSeats - $occupied;
     <a href="#about">About</a>
     <a href="#facilities">Facilities</a>
     <a href="#fees">Fees</a>
+    <a href="#seats"><i class="fas fa-chair me-1"></i>Check Seats</a>
     <a href="#contact">Contact</a>
     <a href="student/login.php" class="btn-login"><i class="fas fa-sign-in-alt me-1"></i>Student Login</a>
   </div>
@@ -321,6 +322,189 @@ $available  = $totalSeats - $occupied;
     </div>
   </div>
 </section>
+
+
+<!-- ============================================================
+     SEAT AVAILABILITY SECTION
+     ============================================================ -->
+<section id="seats" style="background:var(--bg-page);">
+  <div class="container">
+    <div class="text-center mb-5">
+      <div class="section-tag"><i class="fas fa-chair"></i> Live Seat Status</div>
+      <h2 class="section-title">Check Available Seats</h2>
+      <p class="section-sub mx-auto">See which seats are open right now. Click any available seat to contact the admin and reserve it.</p>
+    </div>
+
+    <?php
+    $pubSeats = $pdo->query("SELECT seat_number, seat_type, status FROM seats ORDER BY seat_number")->fetchAll();
+    $totalReserved   = 76;
+    $totalUnreserved = 32;
+    $pubResOcc = $pubUnresOcc = 0;
+    foreach ($pubSeats as $ps) {
+        if ($ps['seat_type'] === 'reserved'   && $ps['status'] === 'occupied') $pubResOcc++;
+        if ($ps['seat_type'] === 'unreserved' && $ps['status'] === 'occupied') $pubUnresOcc++;
+    }
+    $pubResAvail   = $totalReserved   - $pubResOcc;
+    $pubUnresAvail = $totalUnreserved - $pubUnresOcc;
+    $pubTotalAvail = $pubResAvail + $pubUnresAvail;
+    ?>
+
+    <!-- Quick stats -->
+    <div class="row g-3 mb-4 justify-content-center">
+      <div class="col-6 col-md-3">
+        <div class="stat-card text-center">
+          <div class="stat-icon blue" style="margin:0 auto 10px;"><i class="fas fa-chair"></i></div>
+          <div class="stat-value"><?php echo $pubTotalAvail; ?></div>
+          <div class="stat-label">Total Available</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card text-center">
+          <div class="stat-icon green" style="margin:0 auto 10px;"><i class="fas fa-lock-open"></i></div>
+          <div class="stat-value"><?php echo $pubResAvail; ?></div>
+          <div class="stat-label">Reserved Free</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card text-center">
+          <div class="stat-icon" style="margin:0 auto 10px;background:rgba(100,100,100,.10);color:#616161;width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;"><i class="fas fa-door-open"></i></div>
+          <div class="stat-value"><?php echo $pubUnresAvail; ?></div>
+          <div class="stat-label">Unreserved Free</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card text-center">
+          <div class="stat-icon yellow" style="margin:0 auto 10px;"><i class="fas fa-users"></i></div>
+          <div class="stat-value"><?php echo 108 - $pubTotalAvail; ?></div>
+          <div class="stat-label">Occupied</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="seat-legend mb-3" style="justify-content:center;">
+      <div class="legend-item"><div class="legend-dot green"></div> Reserved – Available</div>
+      <div class="legend-item"><div class="legend-dot red"></div> Reserved – Occupied</div>
+      <div class="legend-item"><div class="legend-dot gray"></div> Unreserved – Available</div>
+      <div class="legend-item"><div class="legend-dot yellow"></div> Unreserved – Occupied</div>
+    </div>
+
+    <!-- Seat Grid -->
+    <div class="card-panel mb-4">
+      <div class="card-panel-header">
+        <span class="card-panel-title"><i class="fas fa-th me-2"></i>Seat Map — Click an available seat to request it</span>
+        <span style="font-size:12px;color:#aaa;">Seats 1–76: Reserved &nbsp;|&nbsp; Seats 77–108: Unreserved</span>
+      </div>
+      <div class="card-panel-body">
+        <div class="seat-grid-container">
+          <div class="seat-grid">
+            <?php
+            $rowIdx = 0;
+            foreach ($pubSeats as $pi => $ps):
+              if ($pi % 9 === 0):
+                $rowIdx++;
+                if ($pi > 0) echo '<div class="seat-row-label"></div>';
+                $end = min($ps['seat_number'] + 8, 108);
+                echo "<div class=\"seat-row-label\">Row {$rowIdx} &nbsp; (Seats {$ps['seat_number']}–{$end})</div>";
+              endif;
+              $isOcc = $ps['status'] === 'occupied';
+              $cls   = $ps['seat_type'] === 'reserved'
+                ? ($isOcc ? 'reserved-occupied'   : 'reserved-available')
+                : ($isOcc ? 'unreserved-occupied' : 'unreserved-available');
+              $icon  = $isOcc ? 'fa-user' : 'fa-chair';
+              $dataAttr = htmlspecialchars(json_encode([
+                'seat_number' => $ps['seat_number'],
+                'seat_type'   => ucfirst($ps['seat_type']),
+                'status'      => $ps['status'],
+              ]));
+            ?>
+            <div class="seat-item <?php echo $cls; ?>"
+                 data-seat="<?php echo $dataAttr; ?>"
+                 onclick="openPubSeatModal(this)"
+                 title="Seat <?php echo $ps['seat_number']; ?> — <?php echo ucfirst($ps['seat_type']); ?> — <?php echo ucfirst($ps['status']); ?>">
+              <i class="fas <?php echo $icon; ?>"></i>
+              <?php echo $ps['seat_number']; ?>
+            </div>
+            <?php endforeach; ?>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center">
+      <p style="font-size:13px;color:#888;"><i class="fas fa-sync-alt me-1"></i>Availability updates every time you refresh the page.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Seat Request Modal -->
+<div class="modal fade" id="pubSeatModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:16px;border:none;box-shadow:0 20px 60px rgba(0,0,0,.18);">
+      <div class="modal-header" style="border-bottom:1px solid #f0f0f0;padding:20px 24px;">
+        <h5 class="modal-title"><i class="fas fa-chair me-2" style="color:#0d2b6e;"></i>Seat Request</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="padding:24px;">
+        <!-- Available -->
+        <div id="pubModalAvailable">
+          <p style="margin-bottom:12px;font-size:14px;color:#555;">You selected:</p>
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+            <span style="display:inline-block;background:#0d2b6e;color:#fff;border-radius:8px;padding:4px 14px;font-weight:800;font-family:'Rajdhani',sans-serif;font-size:22px;" id="pubModalSeatNo">–</span>
+            <div>
+              <div style="font-weight:700;font-size:15px;" id="pubModalSeatType">–</div>
+              <div style="font-size:12px;color:#1ab759;font-weight:600;"><i class="fas fa-circle" style="font-size:8px;"></i> Available</div>
+            </div>
+          </div>
+          <p style="font-size:13px;color:#666;margin-bottom:20px;">Contact the admin via WhatsApp or call with your name and this seat number to confirm admission.</p>
+          <a id="pubWaLink" href="#" target="_blank"
+             style="background:#25d366;color:#fff;border-radius:10px;padding:12px 24px;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;margin-bottom:10px;">
+            <i class="fab fa-whatsapp fa-lg"></i> Request via WhatsApp
+          </a>
+          <a id="pubCallLink" href="tel:+919579089287"
+             style="background:#0d2b6e;color:#fff;border-radius:10px;padding:12px 24px;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">
+            <i class="fas fa-phone"></i> Call Admin Directly
+          </a>
+        </div>
+        <!-- Occupied -->
+        <div id="pubModalOccupied" style="display:none;text-align:center;padding:10px 0;">
+          <i class="fas fa-user-times" style="font-size:40px;color:#ef5350;margin-bottom:14px;"></i>
+          <div style="font-weight:700;font-size:18px;margin-bottom:6px;">Seat <span id="pubModalOccNo"></span> is Occupied</div>
+          <p style="font-size:13px;color:#888;margin-bottom:20px;">This seat is taken. Please choose another available seat from the map above.</p>
+          <a id="pubWaAnyLink" href="#" target="_blank"
+             style="background:#25d366;color:#fff;border-radius:10px;padding:12px 24px;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">
+            <i class="fab fa-whatsapp fa-lg"></i> Ask Admin for Any Available Seat
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var ADMIN_PHONE = '919579089287';
+  window.openPubSeatModal = function(el) {
+    var data = JSON.parse(el.dataset.seat);
+    var modal = new bootstrap.Modal(document.getElementById('pubSeatModal'));
+    if (data.status === 'available') {
+      document.getElementById('pubModalAvailable').style.display = '';
+      document.getElementById('pubModalOccupied').style.display  = 'none';
+      document.getElementById('pubModalSeatNo').textContent   = 'Seat ' + data.seat_number;
+      document.getElementById('pubModalSeatType').textContent  = data.seat_type + ' Seat';
+      var msg = encodeURIComponent('Hello! I am interested in Seat No. ' + data.seat_number + ' (' + data.seat_type + ') at Ekagra Abhyasika. Please guide me on the admission process.');
+      document.getElementById('pubWaLink').href = 'https://wa.me/' + ADMIN_PHONE + '?text=' + msg;
+    } else {
+      document.getElementById('pubModalAvailable').style.display = 'none';
+      document.getElementById('pubModalOccupied').style.display  = '';
+      document.getElementById('pubModalOccNo').textContent = data.seat_number;
+      var msg2 = encodeURIComponent('Hello! I am looking for an available seat at Ekagra Abhyasika. Can you help with admission?');
+      document.getElementById('pubWaAnyLink').href = 'https://wa.me/' + ADMIN_PHONE + '?text=' + msg2;
+    }
+    modal.show();
+  };
+})();
+</script>
 
 <!-- ============================================================
      CONTACT SECTION
