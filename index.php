@@ -327,153 +327,312 @@ $available  = $totalSeats - $occupied;
 <!-- ============================================================
      SEAT AVAILABILITY SECTION
      ============================================================ -->
-<section id="seats" style="background:var(--bg-page);">
+<section id="seats" style="background:var(--bg-page);padding:60px 0;">
+<style>
+/* ── Stat pills ── */
+.pub-stats-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:24px;}
+.pub-stat-pill{display:flex;align-items:center;gap:8px;background:#fff;border-radius:50px;padding:8px 16px;box-shadow:0 2px 8px rgba(0,0,0,.07);font-size:13px;font-weight:700;border:1.5px solid transparent;}
+.pub-stat-pill.total {border-color:#0d2b6e;color:#0d2b6e;}
+.pub-stat-pill.res   {border-color:#66bb6a;color:#2e7d32;}
+.pub-stat-pill.unres {border-color:#bdbdbd;color:#555;}
+.pub-stat-pill.occ   {border-color:#ef9a9a;color:#c62828;}
+.pub-stat-pill .pill-num{font-size:18px;font-weight:900;line-height:1;}
+
+/* ── Room wrapper ── */
+.room-wrap{
+  background:#fff;
+  border-radius:16px;
+  box-shadow:0 2px 20px rgba(0,0,0,.08);
+  padding:16px;
+  overflow-x:auto;
+  max-width:700px;
+  margin:0 auto;
+}
+.room-inner{
+  min-width:280px;
+  position:relative;
+}
+
+/* ── Door label ── */
+.door-label{
+  text-align:center;
+  font-size:11px;font-weight:700;letter-spacing:1px;
+  color:#aaa;text-transform:uppercase;
+  margin-bottom:6px;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.door-label::before,.door-label::after{content:'';flex:1;height:1px;background:#e0e0e0;}
+
+/* ── Cabin block (pair of facing rows) ── */
+.cabin-block{
+  display:grid;
+  grid-template-columns:1fr 4px 1fr;
+  gap:0 6px;
+  margin-bottom:3px;
+}
+.cabin-block.has-aisle{margin-bottom:14px;}
+
+/* aisle divider */
+.aisle-div{width:4px;background:rgba(0,0,0,0.06);border-radius:4px;margin:2px 0;}
+
+/* ── Seat row ── */
+.seat-row{display:flex;gap:3px;justify-content:flex-end;}
+.seat-row.right{justify-content:flex-start;}
+
+/* ── Single seat ── */
+.pub-seat{
+  width:36px;height:36px;
+  border-radius:6px;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  font-size:9px;font-weight:800;
+  cursor:pointer;
+  border:1.5px solid transparent;
+  transition:transform .12s,box-shadow .12s;
+  line-height:1;
+  gap:1px;
+  position:relative;
+}
+.pub-seat:hover{transform:scale(1.15);box-shadow:0 4px 12px rgba(0,0,0,.22);z-index:5;}
+.pub-seat i{font-size:11px;}
+
+.pub-seat.res-avail   {background:#e8f5e9;border-color:#66bb6a;color:#2e7d32;}
+.pub-seat.res-occ     {background:#ffebee;border-color:#ef5350;color:#c62828;cursor:not-allowed;}
+.pub-seat.unres-avail {background:#f5f5f5;border-color:#bdbdbd;color:#555;}
+.pub-seat.unres-occ   {background:#fff8e1;border-color:#ffca28;color:#e65100;cursor:not-allowed;}
+
+/* ── Window label ── */
+.window-label{
+  font-size:10px;font-weight:700;color:#aaa;letter-spacing:1px;
+  text-transform:uppercase;text-align:center;
+  padding:8px 0 4px;
+  border-top:1px dashed #e0e0e0;
+  border-bottom:1px dashed #e0e0e0;
+  margin:6px 0;
+}
+
+/* ── AC labels ── */
+.ac-row{display:grid;grid-template-columns:1fr 4px 1fr;gap:0 6px;margin-top:10px;}
+.ac-label{background:#e3f0ff;border-radius:8px;text-align:center;padding:6px;font-size:10px;font-weight:800;color:#0d2b6e;letter-spacing:.5px;}
+
+/* ── Legend ── */
+.pub-legend{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:16px;}
+.pub-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:#555;}
+.pub-legend-dot{width:12px;height:12px;border-radius:3px;border:1.5px solid transparent;}
+.pub-legend-dot.g{background:#e8f5e9;border-color:#66bb6a;}
+.pub-legend-dot.r{background:#ffebee;border-color:#ef5350;}
+.pub-legend-dot.gy{background:#f5f5f5;border-color:#bdbdbd;}
+.pub-legend-dot.y{background:#fff8e1;border-color:#ffca28;}
+
+@media(max-width:420px){
+  .pub-seat{width:30px;height:30px;font-size:8px;}
+  .pub-seat i{font-size:9px;}
+  .room-wrap{padding:10px;}
+}
+</style>
+
   <div class="container">
-    <div class="text-center mb-5">
+    <div class="text-center mb-4">
       <div class="section-tag"><i class="fas fa-chair"></i> Live Seat Status</div>
       <h2 class="section-title">Check Available Seats</h2>
-      <p class="section-sub mx-auto">See which seats are open right now. Click any available seat to contact the admin and reserve it.</p>
+      <p class="section-sub mx-auto" style="font-size:14px;">Tap any seat to request it from the admin</p>
     </div>
 
     <?php
     $pubSeats = $pdo->query("SELECT seat_number, seat_type, status FROM seats ORDER BY seat_number")->fetchAll();
-    $totalReserved   = 76;
-    $totalUnreserved = 32;
-    $pubResOcc = $pubUnresOcc = 0;
+    $seatMap = [];
+    foreach ($pubSeats as $ps) $seatMap[$ps['seat_number']] = $ps;
+
+    $resOcc = $unresOcc = 0;
     foreach ($pubSeats as $ps) {
-        if ($ps['seat_type'] === 'reserved'   && $ps['status'] === 'occupied') $pubResOcc++;
-        if ($ps['seat_type'] === 'unreserved' && $ps['status'] === 'occupied') $pubUnresOcc++;
+        if ($ps['seat_type']==='reserved'   && $ps['status']==='occupied') $resOcc++;
+        if ($ps['seat_type']==='unreserved' && $ps['status']==='occupied') $unresOcc++;
     }
-    $pubResAvail   = $totalReserved   - $pubResOcc;
-    $pubUnresAvail = $totalUnreserved - $pubUnresOcc;
-    $pubTotalAvail = $pubResAvail + $pubUnresAvail;
+    $resAvail   = 76 - $resOcc;
+    $unresAvail = 32 - $unresOcc;
+    $totalAvail = $resAvail + $unresAvail;
+    $totalOcc   = $resOcc + $unresOcc;
+
+    // Helper: render a single seat
+    function pubSeat($seatMap, $n) {
+        if (!isset($seatMap[$n])) return "<div class='pub-seat unres-avail'><i class='fas fa-chair'></i>$n</div>";
+        $s    = $seatMap[$n];
+        $occ  = $s['status'] === 'occupied';
+        $res  = $s['seat_type'] === 'reserved';
+        $cls  = $res ? ($occ ? 'res-occ' : 'res-avail') : ($occ ? 'unres-occ' : 'unres-avail');
+        $icon = $occ ? 'fa-user' : 'fa-chair';
+        $data = htmlspecialchars(json_encode(['seat_number'=>$n,'seat_type'=>ucfirst($s['seat_type']),'status'=>$s['status']]));
+        return "<div class='pub-seat $cls' data-seat='$data' onclick='openPubSeatModal(this)' title='Seat $n'>
+                  <i class='fas $icon'></i>$n
+                </div>";
+    }
+
+    // Helper: render a row of seats
+    function pubRow($seatMap, $nums, $dir='left') {
+        $cls = $dir==='right' ? 'seat-row right' : 'seat-row';
+        $html = "<div class='$cls'>";
+        foreach ($nums as $n) $html .= pubSeat($seatMap, $n);
+        $html .= "</div>";
+        return $html;
+    }
     ?>
 
-    <!-- Quick stats -->
-    <div class="row g-3 mb-4 justify-content-center">
-      <div class="col-6 col-md-3">
-        <div class="stat-card text-center">
-          <div class="stat-icon blue" style="margin:0 auto 10px;"><i class="fas fa-chair"></i></div>
-          <div class="stat-value"><?php echo $pubTotalAvail; ?></div>
-          <div class="stat-label">Total Available</div>
-        </div>
-      </div>
-      <div class="col-6 col-md-3">
-        <div class="stat-card text-center">
-          <div class="stat-icon green" style="margin:0 auto 10px;"><i class="fas fa-lock-open"></i></div>
-          <div class="stat-value"><?php echo $pubResAvail; ?></div>
-          <div class="stat-label">Reserved Free</div>
-        </div>
-      </div>
-      <div class="col-6 col-md-3">
-        <div class="stat-card text-center">
-          <div class="stat-icon" style="margin:0 auto 10px;background:rgba(100,100,100,.10);color:#616161;width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;"><i class="fas fa-door-open"></i></div>
-          <div class="stat-value"><?php echo $pubUnresAvail; ?></div>
-          <div class="stat-label">Unreserved Free</div>
-        </div>
-      </div>
-      <div class="col-6 col-md-3">
-        <div class="stat-card text-center">
-          <div class="stat-icon yellow" style="margin:0 auto 10px;"><i class="fas fa-users"></i></div>
-          <div class="stat-value"><?php echo 108 - $pubTotalAvail; ?></div>
-          <div class="stat-label">Occupied</div>
-        </div>
-      </div>
+    <!-- Stats pills -->
+    <div class="pub-stats-row">
+      <div class="pub-stat-pill total"><span class="pill-num"><?php echo $totalAvail; ?></span> Available</div>
+      <div class="pub-stat-pill res"><span class="pill-num"><?php echo $resAvail; ?></span> Reserved Free</div>
+      <div class="pub-stat-pill unres"><span class="pill-num"><?php echo $unresAvail; ?></span> Unreserved Free</div>
+      <div class="pub-stat-pill occ"><span class="pill-num"><?php echo $totalOcc; ?></span> Occupied</div>
     </div>
 
     <!-- Legend -->
-    <div class="seat-legend mb-3" style="justify-content:center;">
-      <div class="legend-item"><div class="legend-dot green"></div> Reserved – Available</div>
-      <div class="legend-item"><div class="legend-dot red"></div> Reserved – Occupied</div>
-      <div class="legend-item"><div class="legend-dot gray"></div> Unreserved – Available</div>
-      <div class="legend-item"><div class="legend-dot yellow"></div> Unreserved – Occupied</div>
+    <div class="pub-legend">
+      <div class="pub-legend-item"><div class="pub-legend-dot g"></div>Reserved – Free</div>
+      <div class="pub-legend-item"><div class="pub-legend-dot r"></div>Reserved – Taken</div>
+      <div class="pub-legend-item"><div class="pub-legend-dot gy"></div>Unreserved – Free</div>
+      <div class="pub-legend-item"><div class="pub-legend-dot y"></div>Unreserved – Taken</div>
     </div>
 
-    <!-- Seat Grid -->
-    <div class="card-panel mb-4">
-      <div class="card-panel-header">
-        <span class="card-panel-title"><i class="fas fa-th me-2"></i>Seat Map — Click an available seat to request it</span>
-        <span style="font-size:12px;color:#aaa;">Seats 1–76: Reserved &nbsp;|&nbsp; Seats 77–108: Unreserved</span>
-      </div>
-      <div class="card-panel-body">
-        <div class="seat-grid-container">
-          <div class="seat-grid">
-            <?php
-            $rowIdx = 0;
-            foreach ($pubSeats as $pi => $ps):
-              if ($pi % 9 === 0):
-                $rowIdx++;
-                if ($pi > 0) echo '<div class="seat-row-label"></div>';
-                $end = min($ps['seat_number'] + 8, 108);
-                echo "<div class=\"seat-row-label\">Row {$rowIdx} &nbsp; (Seats {$ps['seat_number']}–{$end})</div>";
-              endif;
-              $isOcc = $ps['status'] === 'occupied';
-              $cls   = $ps['seat_type'] === 'reserved'
-                ? ($isOcc ? 'reserved-occupied'   : 'reserved-available')
-                : ($isOcc ? 'unreserved-occupied' : 'unreserved-available');
-              $icon  = $isOcc ? 'fa-user' : 'fa-chair';
-              $dataAttr = htmlspecialchars(json_encode([
-                'seat_number' => $ps['seat_number'],
-                'seat_type'   => ucfirst($ps['seat_type']),
-                'status'      => $ps['status'],
-              ]));
-            ?>
-            <div class="seat-item <?php echo $cls; ?>"
-                 data-seat="<?php echo $dataAttr; ?>"
-                 onclick="openPubSeatModal(this)"
-                 title="Seat <?php echo $ps['seat_number']; ?> — <?php echo ucfirst($ps['seat_type']); ?> — <?php echo ucfirst($ps['status']); ?>">
-              <i class="fas <?php echo $icon; ?>"></i>
-              <?php echo $ps['seat_number']; ?>
-            </div>
-            <?php endforeach; ?>
+    <!-- Room map -->
+    <div class="room-wrap">
+      <div class="room-inner">
+
+        <!-- Door -->
+        <div class="door-label"><i class="fas fa-door-open"></i> DOOR / ENTRANCE</div>
+
+        <!-- Block 1: Seats 1–18 & 5–14 -->
+        <div class="cabin-block">
+          <div>
+            <?php echo pubRow($seatMap,[1,2,3,4],'left'); ?>
+            <?php echo pubRow($seatMap,[18,17,16,15],'left'); ?>
+          </div>
+          <div class="aisle-div"></div>
+          <div>
+            <?php echo pubRow($seatMap,[5,6,7,8,9],'right'); ?>
+            <?php echo pubRow($seatMap,[14,13,12,11,10],'right'); ?>
           </div>
         </div>
-      </div>
-    </div>
 
-    <div class="text-center">
-      <p style="font-size:13px;color:#888;"><i class="fas fa-sync-alt me-1"></i>Availability updates every time you refresh the page.</p>
-    </div>
+        <!-- Block 2: Seats 19–34 & 23–32 -->
+        <div class="cabin-block">
+          <div>
+            <?php echo pubRow($seatMap,[19,20,21,22],'left'); ?>
+            <?php echo pubRow($seatMap,[33,34,35,36],'left'); ?>
+          </div>
+          <div class="aisle-div"></div>
+          <div>
+            <?php echo pubRow($seatMap,[23,24,25,26,27],'right'); ?>
+            <?php echo pubRow($seatMap,[32,31,30,29,28],'right'); ?>
+          </div>
+        </div>
+
+        <!-- Block 3: Seats 37–54 & 41–50 -->
+        <div class="cabin-block">
+          <div>
+            <?php echo pubRow($seatMap,[37,38,39,40],'left'); ?>
+            <?php echo pubRow($seatMap,[54,53,52,51],'left'); ?>
+          </div>
+          <div class="aisle-div"></div>
+          <div>
+            <?php echo pubRow($seatMap,[41,42,43,44,45],'right'); ?>
+            <?php echo pubRow($seatMap,[50,49,48,47,46],'right'); ?>
+          </div>
+        </div>
+
+        <!-- Block 4: Seats 55–72 & 59–68 -->
+        <div class="cabin-block has-aisle">
+          <div>
+            <?php echo pubRow($seatMap,[55,56,57,58],'left'); ?>
+            <?php echo pubRow($seatMap,[72,71,70,69],'left'); ?>
+          </div>
+          <div class="aisle-div"></div>
+          <div>
+            <?php echo pubRow($seatMap,[59,60,61,62,63],'right'); ?>
+            <?php echo pubRow($seatMap,[68,67,66,65,64],'right'); ?>
+          </div>
+        </div>
+
+        <!-- Window divider -->
+        <div class="window-label"><i class="fas fa-wind me-1"></i> WINDOW / AISLE</div>
+
+        <!-- Block 5: Seats 73–90 & 77–86 -->
+        <div class="cabin-block">
+          <div>
+            <?php echo pubRow($seatMap,[73,74,75,76],'left'); ?>
+            <?php echo pubRow($seatMap,[90,89,88,87],'left'); ?>
+          </div>
+          <div class="aisle-div"></div>
+          <div>
+            <?php echo pubRow($seatMap,[77,78,79,80,81],'right'); ?>
+            <?php echo pubRow($seatMap,[86,85,84,83,82],'right'); ?>
+          </div>
+        </div>
+
+        <!-- Block 6: Seats 91–108 & 95–104 -->
+        <div class="cabin-block">
+          <div>
+            <?php echo pubRow($seatMap,[91,92,93,94],'left'); ?>
+            <?php echo pubRow($seatMap,[108,107,106,105],'left'); ?>
+          </div>
+          <div class="aisle-div"></div>
+          <div>
+            <?php echo pubRow($seatMap,[95,96,97,98,99],'right'); ?>
+            <?php echo pubRow($seatMap,[104,103,102,101,100],'right'); ?>
+          </div>
+        </div>
+
+        <!-- AC labels -->
+        <div class="ac-row">
+          <div class="ac-label"><i class="fas fa-snowflake me-1"></i>AC</div>
+          <div></div>
+          <div class="ac-label"><i class="fas fa-snowflake me-1"></i>Air Conditioner</div>
+        </div>
+
+      </div>
+    </div><!-- /room-wrap -->
+
+    <p class="text-center mt-3" style="font-size:12px;color:#aaa;">
+      <i class="fas fa-sync-alt me-1"></i>Refreshes on page load · Tap an available seat to contact admin
+    </p>
+
   </div>
 </section>
 
-<!-- Seat Request Modal -->
+<!-- ── Seat Request Modal ── -->
 <div class="modal fade" id="pubSeatModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content" style="border-radius:16px;border:none;box-shadow:0 20px 60px rgba(0,0,0,.18);">
-      <div class="modal-header" style="border-bottom:1px solid #f0f0f0;padding:20px 24px;">
-        <h5 class="modal-title"><i class="fas fa-chair me-2" style="color:#0d2b6e;"></i>Seat Request</h5>
+      <div class="modal-header" style="border-bottom:1px solid #f0f0f0;padding:18px 20px;">
+        <h5 class="modal-title" style="font-size:15px;"><i class="fas fa-chair me-2" style="color:#0d2b6e;"></i>Seat Request</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body" style="padding:24px;">
-        <!-- Available -->
+      <div class="modal-body" style="padding:20px;">
         <div id="pubModalAvailable">
-          <p style="margin-bottom:12px;font-size:14px;color:#555;">You selected:</p>
-          <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
-            <span style="display:inline-block;background:#0d2b6e;color:#fff;border-radius:8px;padding:4px 14px;font-weight:800;font-family:'Rajdhani',sans-serif;font-size:22px;" id="pubModalSeatNo">–</span>
+          <p style="font-size:13px;color:#555;margin-bottom:10px;">You selected:</p>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <span id="pubModalSeatNo" style="background:#0d2b6e;color:#fff;border-radius:8px;padding:4px 14px;font-weight:900;font-family:'Rajdhani',sans-serif;font-size:22px;">–</span>
             <div>
-              <div style="font-weight:700;font-size:15px;" id="pubModalSeatType">–</div>
-              <div style="font-size:12px;color:#1ab759;font-weight:600;"><i class="fas fa-circle" style="font-size:8px;"></i> Available</div>
+              <div id="pubModalSeatType" style="font-weight:700;font-size:14px;"></div>
+              <div style="font-size:12px;color:#1ab759;font-weight:600;"><i class="fas fa-circle" style="font-size:7px;"></i> Available</div>
             </div>
           </div>
-          <p style="font-size:13px;color:#666;margin-bottom:20px;">Contact the admin via WhatsApp or call with your name and this seat number to confirm admission.</p>
+          <p style="font-size:13px;color:#666;margin-bottom:16px;">Contact admin with your name and seat number to confirm admission.</p>
           <a id="pubWaLink" href="#" target="_blank"
-             style="background:#25d366;color:#fff;border-radius:10px;padding:12px 24px;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;margin-bottom:10px;">
+             style="background:#25d366;color:#fff;border-radius:10px;padding:11px 20px;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;margin-bottom:8px;">
             <i class="fab fa-whatsapp fa-lg"></i> Request via WhatsApp
           </a>
-          <a id="pubCallLink" href="tel:+919579089287"
-             style="background:#0d2b6e;color:#fff;border-radius:10px;padding:12px 24px;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">
-            <i class="fas fa-phone"></i> Call Admin Directly
+          <a href="tel:+919579089287"
+             style="background:#0d2b6e;color:#fff;border-radius:10px;padding:11px 20px;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">
+            <i class="fas fa-phone"></i> Call Admin
           </a>
         </div>
-        <!-- Occupied -->
-        <div id="pubModalOccupied" style="display:none;text-align:center;padding:10px 0;">
-          <i class="fas fa-user-times" style="font-size:40px;color:#ef5350;margin-bottom:14px;"></i>
-          <div style="font-weight:700;font-size:18px;margin-bottom:6px;">Seat <span id="pubModalOccNo"></span> is Occupied</div>
-          <p style="font-size:13px;color:#888;margin-bottom:20px;">This seat is taken. Please choose another available seat from the map above.</p>
+        <div id="pubModalOccupied" style="display:none;text-align:center;padding:8px 0;">
+          <i class="fas fa-user-times" style="font-size:36px;color:#ef5350;margin-bottom:12px;"></i>
+          <div style="font-weight:700;font-size:16px;margin-bottom:6px;">Seat <span id="pubModalOccNo"></span> is Occupied</div>
+          <p style="font-size:13px;color:#888;margin-bottom:16px;">Choose another available seat from the map.</p>
           <a id="pubWaAnyLink" href="#" target="_blank"
-             style="background:#25d366;color:#fff;border-radius:10px;padding:12px 24px;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">
-            <i class="fab fa-whatsapp fa-lg"></i> Ask Admin for Any Available Seat
+             style="background:#25d366;color:#fff;border-radius:10px;padding:11px 20px;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">
+            <i class="fab fa-whatsapp fa-lg"></i> Ask Admin for Any Seat
           </a>
         </div>
       </div>
@@ -483,25 +642,25 @@ $available  = $totalSeats - $occupied;
 
 <script>
 (function(){
-  var ADMIN_PHONE = '919579089287';
-  window.openPubSeatModal = function(el) {
-    var data = JSON.parse(el.dataset.seat);
-    var modal = new bootstrap.Modal(document.getElementById('pubSeatModal'));
-    if (data.status === 'available') {
-      document.getElementById('pubModalAvailable').style.display = '';
-      document.getElementById('pubModalOccupied').style.display  = 'none';
-      document.getElementById('pubModalSeatNo').textContent   = 'Seat ' + data.seat_number;
-      document.getElementById('pubModalSeatType').textContent  = data.seat_type + ' Seat';
-      var msg = encodeURIComponent('Hello! I am interested in Seat No. ' + data.seat_number + ' (' + data.seat_type + ') at Ekagra Abhyasika. Please guide me on the admission process.');
-      document.getElementById('pubWaLink').href = 'https://wa.me/' + ADMIN_PHONE + '?text=' + msg;
+  var ADMIN = '919579089287';
+  window.openPubSeatModal = function(el){
+    var d = JSON.parse(el.dataset.seat);
+    var m = new bootstrap.Modal(document.getElementById('pubSeatModal'));
+    if(d.status==='available'){
+      document.getElementById('pubModalAvailable').style.display='';
+      document.getElementById('pubModalOccupied').style.display='none';
+      document.getElementById('pubModalSeatNo').textContent='Seat '+d.seat_number;
+      document.getElementById('pubModalSeatType').textContent=d.seat_type+' Seat';
+      var msg=encodeURIComponent('Hello! I want to book Seat No. '+d.seat_number+' ('+d.seat_type+') at Ekagra Abhyasika. Please guide me on the admission process.');
+      document.getElementById('pubWaLink').href='https://wa.me/'+ADMIN+'?text='+msg;
     } else {
-      document.getElementById('pubModalAvailable').style.display = 'none';
-      document.getElementById('pubModalOccupied').style.display  = '';
-      document.getElementById('pubModalOccNo').textContent = data.seat_number;
-      var msg2 = encodeURIComponent('Hello! I am looking for an available seat at Ekagra Abhyasika. Can you help with admission?');
-      document.getElementById('pubWaAnyLink').href = 'https://wa.me/' + ADMIN_PHONE + '?text=' + msg2;
+      document.getElementById('pubModalAvailable').style.display='none';
+      document.getElementById('pubModalOccupied').style.display='';
+      document.getElementById('pubModalOccNo').textContent=d.seat_number;
+      var msg2=encodeURIComponent('Hello! I am looking for an available seat at Ekagra Abhyasika. Can you help?');
+      document.getElementById('pubWaAnyLink').href='https://wa.me/'+ADMIN+'?text='+msg2;
     }
-    modal.show();
+    m.show();
   };
 })();
 </script>
@@ -555,9 +714,14 @@ $available  = $totalSeats - $occupied;
       <div class="col-lg-7">
         <div style="border-radius:var(--radius-lg);overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.4);">
           <iframe
-            src="https://maps.google.com/maps?q=Undri+City+Center+Complex+Pune+Maharashtra&t=&z=15&ie=UTF8&iwloc=&output=embed"
-            width="100%" height="420" style="border:0;display:block;"
-            allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+
+    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3424.8700149238466!2d73.91035957465067!3d18.456255071136766!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bc2ebc27511fefd%3A0x4ef4effaff2598a5!2sEKAGRA%20ABHYASHIKA%20(Library)!5e1!3m2!1sen!2sin!4v1778398953077!5m2!1sen!2sin"
+    width="100%"
+    height="420"
+    style="border:0;display:block;"
+    allowfullscreen
+    loading="lazy"
+    referrerpolicy="no-referrer-when-downgrade">
           </iframe>
         </div>
       </div>
