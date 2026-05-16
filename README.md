@@ -1,4 +1,4 @@
-# EKAGRA ABHYASIKA
+MODERN LIBRARY OR SELF STUDY CENTER MANAGEMENT SYSTEM 
 
 A modern Study Room / Library Management System built using PHP and MySQL.
 
@@ -80,20 +80,7 @@ assets/     → CSS & JavaScript files
 * Session Authentication
 * XSS Protection
 
----
 
-# 💺 Seat Structure
-
-| Type       | Seats    |
-| ---------- | -------- |
-| Reserved   | 1 – 76   |
-| Unreserved | 77 – 108 |
-
----
-
-
-
----
 
 # ⚙️ Installation
 
@@ -102,7 +89,7 @@ assets/     → CSS & JavaScript files
 3. Configure database credentials
 4. Run on XAMPP or hosting server
 
----
+
 
 # 📌 Hosting
 
@@ -112,7 +99,7 @@ Compatible with:
 * XAMPP
 * Apache Servers
 
----
+
 
 # 📍 Location
 
