@@ -259,7 +259,7 @@ $available  = $totalSeats - $occupied;
       <div class="col-md-6 col-lg-4">
         <div class="fee-card h-100">
           <div class="fee-tag">Monthly — Unreserved</div>
-          <div class="fee-price"><sup>₹</sup>1800<small>/month</small></div>
+          <div class="fee-price"><sup>₹</sup>1XXX<small>/month</small></div>
           <hr style="margin:20px 0;border-color:var(--border);">
           <ul style="list-style:none;padding:0;margin:0;">
             <?php foreach (['Access to full library','AC reading hall','RO water included','CCTV security','24hr power backup','Any available seat (unreserved)'] as $item): ?>
@@ -276,8 +276,8 @@ $available  = $totalSeats - $occupied;
         <div class="fee-card featured h-100" style="position:relative;">
           <div style="position:absolute;top:-12px;right:20px;background:var(--accent);color:var(--primary-dark);padding:4px 14px;border-radius:20px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;"></div>
           <div class="fee-tag">Monthly — Reserved</div>
-          <div class="fee-price"><sup>₹</sup>1900<small>/month</small></div>
-          <p style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:4px;">₹1800 monthly + ₹100 seat reservation</p>
+          <div class="fee-price"><sup>₹</sup>1XXX<small>/month</small></div>
+          <p style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:4px;">₹1XXX monthly + ₹100 seat reservation</p>
           <hr style="margin:20px 0;border-color:rgba(255,255,255,0.15);">
           <ul style="list-style:none;padding:0;margin:0;">
             <?php foreach (['Your own fixed seat number','No one else can use your seat','All unreserved plan benefits','₹100 extra for seat reservation','Guaranteed seat every visit','Peace of mind'] as $item): ?>
