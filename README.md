@@ -17,7 +17,7 @@ This project helps study rooms and libraries manage:
 
 ### Website
 
-[EKAGRA ABHYASIKA Website](https://ekagraabhyasika.great-site.net/)
+(https://ekagraabhyasika.great-site.net/)
 
 ### Admin Login
 
@@ -98,22 +98,3 @@ Compatible with:
 * InfinityFree
 * XAMPP
 * Apache Servers
-
-
-
-# 📍 Location
-
-Ekagra Abhyasika
-Undri, Pune, Maharashtra
-
----
-
-# 👨‍💻 Developed By
-
-S.R.BIRADAR
-
----
-
-# 📜 License
-
-This project is for educational and learning purposes.
