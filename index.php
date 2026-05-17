@@ -2,18 +2,28 @@
 ob_start();
 require_once 'includes/db.php';
 
-// Get live seat stats for homepage
-$totalSeats = 108;
-$occupied   = $pdo->query("SELECT COUNT(*) FROM seats WHERE status='occupied'")->fetchColumn();
-$available  = $totalSeats - $occupied;
+// ── Live stats (new schema: seat_type lives on students, not seats) ──
+$totalSeats         = 107;
+$reservedCapacity   = 64;   // guideline ~60%
+$unreservedCapacity = 43;   // guideline ~40%
+
+// Count active students by type
+$reservedOccupied  = (int)$pdo->query("SELECT COUNT(*) FROM students WHERE seat_type='reserved'   AND status='active'")->fetchColumn();
+$unreservedActive  = (int)$pdo->query("SELECT COUNT(*) FROM students WHERE seat_type='unreserved' AND status='active'")->fetchColumn();
+$reservedFree      = $reservedCapacity   - $reservedOccupied;
+$unreservedFree    = $unreservedCapacity - $unreservedActive;
+
+// Physical seats actually occupied (seats table, status='occupied')
+$physicalOccupied  = (int)$pdo->query("SELECT COUNT(*) FROM seats WHERE status='occupied'")->fetchColumn();
+$available         = $totalSeats - $physicalOccupied;
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ekagra Abhyasika — Premium Study Library, Undri,Pune</title>
-  <meta name="description" content="Ekagra Abhyasika — Premium private study library at Undri, Pune. AC study hall, individual cabins, 108 seats. Open 6AM–10PM, 7 days a week.">
+  <title>Ekagra Abhyasika — Premium Study Library, Undri Pune</title>
+  <meta name="description" content="Ekagra Abhyasika — Premium private study library at Undri, Pune. AC study hall, individual cabins,  107seats. Open 6AM–10PM, 7 days a week.">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -23,7 +33,7 @@ $available  = $totalSeats - $occupied;
   <!-- Running Announcement Bar -->
 <div class="announcement-bar">
   <div class="announcement-track">
-    📢 Admissions Open at Ekagra Abhyasika • Reserved & Unreserved Seats Available • Premium AC Study Library in Undri Pune • Open Daily 6:00 AM – 10:00 PM
+    📢 Admissions Open at Ekagra Abhyasika • High Speed Wi-Fi • Washrooms for Boys & Girls • Tiffin Room • Personal Lockers • 60% Reserved Seats • Parking Available • Open Daily 6:00 AM – 10:00 PM
   </div>
 </div>
 
@@ -31,7 +41,7 @@ $available  = $totalSeats - $occupied;
 .announcement-bar{
     width:100%;
     overflow:hidden;
-    background:linear-gradient(90deg,#0d2b6e,#081631);
+    background:linear-gradient(90deg,#1a7a2e,#0f5520);
     color:#fff;
     padding:12px 0;
     position:sticky;
@@ -99,7 +109,7 @@ $available  = $totalSeats - $occupied;
         </div>
         <div class="hero-stats">
           <div class="hero-stat-item">
-            <div class="hero-stat-value">108</div>
+            <div class="hero-stat-value">107</div>
             <div class="hero-stat-label">Total Seats</div>
           </div>
           <div class="hero-stat-item">
@@ -123,24 +133,24 @@ $available  = $totalSeats - $occupied;
           <div class="text-center mb-4">
             <div style="font-family:var(--font-display);font-size:14px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">Live Availability</div>
             <div style="font-family:var(--font-display);font-size:52px;font-weight:800;color:#fff;line-height:1;">
-              <?php echo $available; ?><span style="font-size:22px;color:rgba(255,255,255,0.5);">/108</span>
+              <?php echo $available; ?><span style="font-size:22px;color:rgba(255,255,255,0.5);">/107</span>
             </div>
             <div style="color:rgba(255,255,255,0.5);font-size:13px;margin-top:4px;">Seats Available Today</div>
           </div>
           <div style="background:rgba(255,255,255,0.06);border-radius:10px;padding:14px;margin-bottom:10px;">
             <div class="d-flex justify-content-between align-items-center">
               <span style="color:rgba(255,255,255,0.7);font-size:13px;">
-                <i class="fas fa-lock me-2" style="color:var(--accent);"></i>Reserved Seats (1–76)
+                <i class="fas fa-lock me-2" style="color:var(--accent);"></i>Reserved Students
               </span>
-              <span style="color:var(--accent);font-weight:700;font-size:15px;">76</span>
+              <span style="color:var(--accent);font-weight:700;font-size:15px;"><?php echo $reservedOccupied; ?>/<?php echo $reservedCapacity; ?></span>
             </div>
           </div>
           <div style="background:rgba(255,255,255,0.06);border-radius:10px;padding:14px;margin-bottom:20px;">
             <div class="d-flex justify-content-between align-items-center">
               <span style="color:rgba(255,255,255,0.7);font-size:13px;">
-                <i class="fas fa-door-open me-2" style="color:#66bb6a;"></i>Unreserved Seats (77–108)
+                <i class="fas fa-door-open me-2" style="color:#66bb6a;"></i>Unreserved Students
               </span>
-              <span style="color:#66bb6a;font-weight:700;font-size:15px;">32</span>
+              <span style="color:#66bb6a;font-weight:700;font-size:15px;"><?php echo $unreservedActive; ?>/<?php echo $unreservedCapacity; ?></span>
             </div>
           </div>
           <div style="background:rgba(26,183,89,0.15);border:1px solid rgba(26,183,89,0.3);border-radius:10px;padding:14px;text-align:center;">
@@ -175,7 +185,7 @@ $available  = $totalSeats - $occupied;
           foreach ($highlights as $h): ?>
           <div class="col-md-6">
             <div style="display:flex;align-items:flex-start;gap:14px;padding:16px;background:var(--bg-page);border-radius:var(--radius);border:1px solid var(--border);">
-              <div style="width:40px;height:40px;background:rgba(13,43,110,0.08);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--primary);flex-shrink:0;">
+              <div style="width:40px;height:40px;background:rgba(26,122,46,0.08);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--primary);flex-shrink:0;">
                 <i class="<?php echo $h[0]; ?>"></i>
               </div>
               <div>
@@ -194,7 +204,7 @@ $available  = $totalSeats - $occupied;
             <i class="fas fa-clock me-2"></i>Library Timings
           </h3>
           <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;padding:16px;background:rgba(255,255,255,0.06);border-radius:10px;">
-            <i class="fas fa-sun" style="font-size:24px;color:#ffd700;flex-shrink:0;"></i>
+            <i class="fas fa-sun" style="font-size:24px;color:#00bcd4;flex-shrink:0;"></i>
             <div><div style="font-weight:700;">Morning Opening</div><div style="color:rgba(255,255,255,0.6);font-size:13px;">6:00 AM every day</div></div>
           </div>
           <div style="display:flex;align-items:center;gap:16px;margin-bottom:28px;padding:16px;background:rgba(255,255,255,0.06);border-radius:10px;">
@@ -223,12 +233,18 @@ $available  = $totalSeats - $occupied;
     <div class="row g-4">
       <?php
       $facilities = [
-        ['fas fa-tint',       'RO Drinking Water',    'Pure RO-filtered drinking water available throughout the day at no extra cost.'],
-        ['fas fa-snowflake',  'AC Reading Hall',      'Fully air-conditioned hall maintains perfect temperature for focused studying.'],
-        ['fas fa-video',      'CCTV Security',        '24/7 surveillance cameras ensure the safety of students and their belongings.'],
-        ['fas fa-bolt',       '24hr Power Backup',    'Never lose your study session — uninterrupted power supply is always on.'],
-        ['fas fa-user-shield','Individual Cabins',    'Private study cabins for maximum focus and personal space away from distractions.'],
-        ['fas fa-volume-mute','Silence Zone',         'Strict silence maintained — ideal for deep concentration and exam preparation.'],
+        ['fas fa-tint',          'RO Drinking Water',         'Pure RO-filtered drinking water available throughout the day at no extra cost.'],
+        ['fas fa-snowflake',     'AC Reading Hall',           'Fully air-conditioned hall maintains perfect temperature for focused studying.'],
+        ['fas fa-video',         'CCTV Security',             '24/7 surveillance cameras ensure the safety of students and their belongings.'],
+        ['fas fa-bolt',          '24hr Power Backup',         'Never lose your study session — uninterrupted power supply is always on.'],
+        ['fas fa-user-shield',   'Individual Cabins',         'Private study cabins for maximum focus and personal space away from distractions. Every cabin has its own dedicated charging socket — keep your devices powered all day.'],
+        ['fas fa-volume-mute',   'Silence Zone',              'Strict silence maintained — ideal for deep concentration and exam preparation.'],
+        ['fas fa-wifi',          'High Speed Wi-Fi',          'Blazing-fast high-speed Wi-Fi internet available throughout the library — stay connected without interruption.'],
+        ['fas fa-restroom',      'Washrooms',        'Washrooms for boys and girls — clean, hygienic, and maintained daily for your comfort.'],
+        ['fas fa-utensils',      'Tiffin Room',               'Dedicated tiffin / lunch room where students can eat comfortably without disturbing the study hall.'],
+        ['fas fa-lock',          'Personal Lockers',          'Secure personal lockers available for reserved seat holders — keep your books and belongings safe.'],
+        ['fas fa-car',           'Parking Available',         'Ample two-wheeler and four-wheeler parking space available for students right outside the library.'],
+        ['fas fa-chair',         '60% Reserved · 40% General','60% of total seats are reserved for enrolled members; remaining 40% are open for walk-in general access.'],
       ];
       foreach ($facilities as $f): ?>
       <div class="col-md-6 col-lg-4">
@@ -274,7 +290,7 @@ $available  = $totalSeats - $occupied;
       <!-- Reserved Plan (featured) -->
       <div class="col-md-6 col-lg-4">
         <div class="fee-card featured h-100" style="position:relative;">
-          <div style="position:absolute;top:-12px;right:20px;background:var(--accent);color:var(--primary-dark);padding:4px 14px;border-radius:20px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;"></div>
+          <div style="position:absolute;top:-12px;right:20px;background:var(--accent);color:#fff;padding:4px 14px;border-radius:20px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;"></div>
           <div class="fee-tag">Monthly — Reserved</div>
           <div class="fee-price"><sup>₹</sup>1XXX<small>/month</small></div>
           <p style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:4px;">₹1XXX monthly + ₹100 seat reservation</p>
@@ -332,7 +348,7 @@ $available  = $totalSeats - $occupied;
 /* ── Stat pills ── */
 .pub-stats-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:24px;}
 .pub-stat-pill{display:flex;align-items:center;gap:8px;background:#fff;border-radius:50px;padding:8px 16px;box-shadow:0 2px 8px rgba(0,0,0,.07);font-size:13px;font-weight:700;border:1.5px solid transparent;}
-.pub-stat-pill.total {border-color:#0d2b6e;color:#0d2b6e;}
+.pub-stat-pill.total {border-color:#1a7a2e;color:#1a7a2e;}
 .pub-stat-pill.res   {border-color:#66bb6a;color:#2e7d32;}
 .pub-stat-pill.unres {border-color:#bdbdbd;color:#555;}
 .pub-stat-pill.occ   {border-color:#ef9a9a;color:#c62828;}
@@ -413,7 +429,7 @@ $available  = $totalSeats - $occupied;
 
 /* ── AC labels ── */
 .ac-row{display:grid;grid-template-columns:1fr 4px 1fr;gap:0 6px;margin-top:10px;}
-.ac-label{background:#e3f0ff;border-radius:8px;text-align:center;padding:6px;font-size:10px;font-weight:800;color:#0d2b6e;letter-spacing:.5px;}
+.ac-label{background:#e3f0ff;border-radius:8px;text-align:center;padding:6px;font-size:10px;font-weight:800;color:#1a7a2e;letter-spacing:.5px;}
 
 /* ── Legend ── */
 .pub-legend{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:16px;}
@@ -439,32 +455,48 @@ $available  = $totalSeats - $occupied;
     </div>
 
     <?php
+    // Fetch all 107 physical seats
     $pubSeats = $pdo->query("SELECT seat_number, seat_type, status FROM seats ORDER BY seat_number")->fetchAll();
     $seatMap = [];
     foreach ($pubSeats as $ps) $seatMap[$ps['seat_number']] = $ps;
 
-    $resOcc = $unresOcc = 0;
-    foreach ($pubSeats as $ps) {
-        if ($ps['seat_type']==='reserved'   && $ps['status']==='occupied') $resOcc++;
-        if ($ps['seat_type']==='unreserved' && $ps['status']==='occupied') $unresOcc++;
-    }
-    $resAvail   = 76 - $resOcc;
-    $unresAvail = 32 - $unresOcc;
-    $totalAvail = $resAvail + $unresAvail;
-    $totalOcc   = $resOcc + $unresOcc;
+    // Stats: use student-based counts (seat_type on students, not seats)
+    // Reserved free = capacity - active reserved students
+    // Unreserved students = active unreserved students
+    $mapResOcc    = $reservedOccupied;   // from top of page
+    $mapUnresAct  = $unreservedActive;   // from top of page
+    $mapResFree   = $reservedFree;       // capacity - taken
+    $mapTotalOcc  = $physicalOccupied;
+    $mapTotalAvail= $available;
 
     // Helper: render a single seat
+    // seat_type on seats table is NULL when free, 'reserved' when a student is assigned
     function pubSeat($seatMap, $n) {
-        if (!isset($seatMap[$n])) return "<div class='pub-seat unres-avail'><i class='fas fa-chair'></i>$n</div>";
-        $s    = $seatMap[$n];
-        $occ  = $s['status'] === 'occupied';
-        $res  = $s['seat_type'] === 'reserved';
-        $cls  = $res ? ($occ ? 'res-occ' : 'res-avail') : ($occ ? 'unres-occ' : 'unres-avail');
-        $icon = $occ ? 'fa-user' : 'fa-chair';
-        $data = htmlspecialchars(json_encode(['seat_number'=>$n,'seat_type'=>ucfirst($s['seat_type']),'status'=>$s['status']]));
-        return "<div class='pub-seat $cls' data-seat='$data' onclick='openPubSeatModal(this)' title='Seat $n'>
-                  <i class='fas $icon'></i>$n
-                </div>";
+        if (!isset($seatMap[$n])) {
+            // Seat exists in layout but not in DB — show as available
+            return "<div class='pub-seat res-avail'><i class='fas fa-chair'></i>$n</div>";
+        }
+        $s   = $seatMap[$n];
+        $occ = ($s['status'] === 'occupied');
+        // When occupied, seat_type tells us reserved vs unreserved
+        // When free, seat_type is NULL (no student assigned)
+        $res = ($s['seat_type'] === 'reserved');
+        if ($occ) {
+            $cls  = $res ? 'res-occ' : 'unres-occ';
+            $icon = 'fa-user';
+            $data = htmlspecialchars(json_encode(['seat_number'=>$n,'seat_type'=>'Reserved','status'=>'occupied']));
+            return "<div class='pub-seat $cls' data-seat='$data' onclick='openPubSeatModal(this)' title='Seat $n — Occupied'>
+                      <i class='fas $icon'></i>$n
+                    </div>";
+        } else {
+            // Free seat (seat_type is NULL) — show as available/reservable
+            $cls  = 'res-avail';
+            $icon = 'fa-chair';
+            $data = htmlspecialchars(json_encode(['seat_number'=>$n,'seat_type'=>'Reserved','status'=>'available']));
+            return "<div class='pub-seat $cls' data-seat='$data' onclick='openPubSeatModal(this)' title='Seat $n — Free'>
+                      <i class='fas $icon'></i>$n
+                    </div>";
+        }
     }
 
     // Helper: render a row of seats
@@ -479,18 +511,17 @@ $available  = $totalSeats - $occupied;
 
     <!-- Stats pills -->
     <div class="pub-stats-row">
-      <div class="pub-stat-pill total"><span class="pill-num"><?php echo $totalAvail; ?></span> Available</div>
-      <div class="pub-stat-pill res"><span class="pill-num"><?php echo $resAvail; ?></span> Reserved Free</div>
-      <div class="pub-stat-pill unres"><span class="pill-num"><?php echo $unresAvail; ?></span> Unreserved Free</div>
-      <div class="pub-stat-pill occ"><span class="pill-num"><?php echo $totalOcc; ?></span> Occupied</div>
+      <div class="pub-stat-pill total"><span class="pill-num"><?php echo $mapTotalAvail; ?></span> Seats Free</div>
+      <div class="pub-stat-pill res"><span class="pill-num"><?php echo $mapResOcc; ?>/<?php echo $reservedCapacity; ?></span> Reserved Taken</div>
+      <div class="pub-stat-pill unres"><span class="pill-num"><?php echo $mapUnresAct; ?></span> Unreserved Students</div>
+      <div class="pub-stat-pill occ"><span class="pill-num"><?php echo $mapTotalOcc; ?></span> Occupied</div>
     </div>
 
     <!-- Legend -->
     <div class="pub-legend">
-      <div class="pub-legend-item"><div class="pub-legend-dot g"></div>Reserved – Free</div>
-      <div class="pub-legend-item"><div class="pub-legend-dot r"></div>Reserved – Taken</div>
-      <div class="pub-legend-item"><div class="pub-legend-dot gy"></div>Unreserved – Free</div>
-      <div class="pub-legend-item"><div class="pub-legend-dot y"></div>Unreserved – Taken</div>
+      <div class="pub-legend-item"><div class="pub-legend-dot g"></div>Available — Tap to Enquire</div>
+      <div class="pub-legend-item"><div class="pub-legend-dot r"></div>Reserved — Taken</div>
+      <div class="pub-legend-item"><div class="pub-legend-dot y"></div>Unreserved — Taken</div>
     </div>
 
     <!-- Room map -->
@@ -568,11 +599,11 @@ $available  = $totalSeats - $occupied;
           </div>
         </div>
 
-        <!-- Block 6: Seats 91–108 & 95–104 -->
+       
         <div class="cabin-block">
           <div>
             <?php echo pubRow($seatMap,[91,92,93,94],'left'); ?>
-            <?php echo pubRow($seatMap,[108,107,106,105],'left'); ?>
+            <?php echo pubRow($seatMap,[107,106,105],'left'); ?>
           </div>
           <div class="aisle-div"></div>
           <div>
@@ -595,7 +626,20 @@ $available  = $totalSeats - $occupied;
       <i class="fas fa-sync-alt me-1"></i>Refreshes on page load · Tap an available seat to contact admin
     </p>
 
-  </div>
+    <!-- Unreserved info box -->
+    <div style="max-width:700px;margin:16px auto 0;background:#f0f7ff;border:1.5px solid #b3d0f5;border-radius:12px;padding:16px 20px;display:flex;align-items:flex-start;gap:14px;">
+      <i class="fas fa-door-open" style="color:#1a7a2e;font-size:22px;margin-top:2px;flex-shrink:0;"></i>
+      <div>
+        <div style="font-weight:700;font-size:14px;color:#1a7a2e;margin-bottom:4px;">Unreserved (General) Access</div>
+        <div style="font-size:13px;color:#555;line-height:1.5;">
+          Don't need a fixed seat? Choose our <strong>Unreserved plan at ₹1800/month</strong> — sit anywhere that's free each day.
+          <a href="https://wa.me/917709497762?text=<?php echo rawurlencode('Hello! I am interested in Unreserved (General) access at Ekagra Abhyasika. Please guide me.'); ?>"
+             target="_blank" style="color:#1a7a2e;font-weight:700;text-decoration:underline;margin-left:4px;">Enquire on WhatsApp →</a>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /container -->
 </section>
 
 <!-- ── Seat Request Modal ── -->
@@ -603,14 +647,14 @@ $available  = $totalSeats - $occupied;
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content" style="border-radius:16px;border:none;box-shadow:0 20px 60px rgba(0,0,0,.18);">
       <div class="modal-header" style="border-bottom:1px solid #f0f0f0;padding:18px 20px;">
-        <h5 class="modal-title" style="font-size:15px;"><i class="fas fa-chair me-2" style="color:#0d2b6e;"></i>Seat Request</h5>
+        <h5 class="modal-title" style="font-size:15px;"><i class="fas fa-chair me-2" style="color:#1a7a2e;"></i>Seat Request</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body" style="padding:20px;">
         <div id="pubModalAvailable">
           <p style="font-size:13px;color:#555;margin-bottom:10px;">You selected:</p>
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-            <span id="pubModalSeatNo" style="background:#0d2b6e;color:#fff;border-radius:8px;padding:4px 14px;font-weight:900;font-family:'Rajdhani',sans-serif;font-size:22px;">–</span>
+            <span id="pubModalSeatNo" style="background:#1a7a2e;color:#fff;border-radius:8px;padding:4px 14px;font-weight:900;font-family:'Rajdhani',sans-serif;font-size:22px;">–</span>
             <div>
               <div id="pubModalSeatType" style="font-weight:700;font-size:14px;"></div>
               <div style="font-size:12px;color:#1ab759;font-weight:600;"><i class="fas fa-circle" style="font-size:7px;"></i> Available</div>
@@ -621,8 +665,8 @@ $available  = $totalSeats - $occupied;
              style="background:#25d366;color:#fff;border-radius:10px;padding:11px 20px;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;margin-bottom:8px;">
             <i class="fab fa-whatsapp fa-lg"></i> Request via WhatsApp
           </a>
-          <a href="tel:+919579089287"
-             style="background:#0d2b6e;color:#fff;border-radius:10px;padding:11px 20px;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">
+          <a href="tel:+917709497762"
+             style="background:#1a7a2e;color:#fff;border-radius:10px;padding:11px 20px;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">
             <i class="fas fa-phone"></i> Call Admin
           </a>
         </div>
@@ -642,7 +686,7 @@ $available  = $totalSeats - $occupied;
 
 <script>
 (function(){
-  var ADMIN = '919579089287';
+  var ADMIN = '917709497762';
   window.openPubSeatModal = function(el){
     var d = JSON.parse(el.dataset.seat);
     var m = new bootstrap.Modal(document.getElementById('pubSeatModal'));
@@ -696,15 +740,15 @@ $available  = $totalSeats - $occupied;
           <div class="contact-info-icon"><i class="fab fa-whatsapp"></i></div>
           <div>
             <h6>WhatsApp / Call</h6>
-            <p><a href="tel:+919579089287" style="color:var(--accent);text-decoration:none;font-weight:700;">+91 95790 89287</a></p>
+            <p><a href="tel:+917709497762" style="color:var(--accent);text-decoration:none;font-weight:700;">+91 77094 97762</a></p>
           </div>
         </div>
 
         <div class="d-flex gap-3 mt-4">
-          <a href="tel:+919579089287" class="btn btn-accent" style="flex:1;text-align:center;">
+          <a href="tel:+917709497762" class="btn btn-accent" style="flex:1;text-align:center;">
             <i class="fas fa-phone me-2"></i>Call Now
           </a>
-          <a href="https://wa.me/919579089287?text=Hello%2C+I+want+to+know+about+Ekagra+Abhyasika" target="_blank"
+          <a href="https://wa.me/917709497762?text=Hello%2C+I+want+to+know+about+Ekagra+Abhyasika" target="_blank"
              class="btn" style="flex:1;text-align:center;background:#25d366;color:#fff;">
             <i class="fab fa-whatsapp me-2"></i>WhatsApp
           </a>
@@ -769,21 +813,34 @@ $available  = $totalSeats - $occupied;
 <footer class="site-footer">
   <div class="container">
     <p>© <?php echo date('Y'); ?> Ekagra Abhyasika. All Rights Reserved.</p>
+
     <p style="margin-top:4px;font-size:12px;color:rgba(255,255,255,0.3);">
       City Center Complex, 3rd Floor, Office No 304, Undri, Pune, Maharashtra, India
       &nbsp;|&nbsp;
-      <a href="admin/login.php" style="color:rgba(255,255,255,0.2);text-decoration:none;">Admin</a>
+
+      Built By 
+      <a href="https://instagram.com/shribiradar" target="_blank"
+         style="color:#E1306C;text-decoration:none;">
+                          @shribiradar
+      </a>
+
+      &nbsp;|&nbsp;
+
+      <a href="admin/login.php"
+         style="color:rgba(255,255,255,0.2);text-decoration:none;">
+         Admin
+      </a>
     </p>
   </div>
 </footer>
 
 <!-- Floating Buttons -->
 <div class="floating-btns">
-  <a href="https://wa.me/919579089287?text=Hello%2C+I+want+to+know+about+Ekagra+Abhyasika"
+  <a href="https://wa.me/917709497762?text=Hello%2C+I+want+to+know+about+Ekagra+Abhyasika"
      target="_blank" class="float-btn wa" title="WhatsApp Us">
     <i class="fab fa-whatsapp"></i>
   </a>
-  <a href="tel:+919579089287" class="float-btn call" title="Call Us">
+  <a href="tel:+917709497762" class="float-btn call" title="Call Us">
     <i class="fas fa-phone"></i>
   </a>
 </div>
