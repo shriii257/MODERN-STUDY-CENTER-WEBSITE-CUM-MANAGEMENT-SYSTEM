@@ -305,9 +305,37 @@ $statusColor = match($student['status']) {
 
 <footer class="site-footer">
   <div class="container">
-    <p>© <?php echo date('Y'); ?> Ekagra Abhyasika | City Center Complex, Undri, Pune</p>
+    <p>
+      © <?php echo date('Y'); ?> Ekagra Abhyasika | City Center Complex, Undri, Pune
+      &nbsp;|&nbsp;
+      Developed by 
+      <a href="https://instagram.com/shribiradar" target="_blank" class="footer-link">
+        @shribiradar
+      </a>
+    </p>
   </div>
 </footer>
+
+<style>
+.site-footer{
+    background:#111827;
+    padding:15px 10px;
+    text-align:center;
+    color:#d1d5db;
+    font-size:14px;
+}
+
+.footer-link{
+    color:#E1306C;
+    text-decoration:none;
+    font-weight:500;
+    transition:0.3s;
+}
+
+.footer-link:hover{
+    opacity:0.8;
+}
+</style>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
