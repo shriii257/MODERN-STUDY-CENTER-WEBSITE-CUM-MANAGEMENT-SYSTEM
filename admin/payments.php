@@ -20,18 +20,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $stmt = $pdo->prepare("INSERT INTO payments (student_id, amount, payment_type, payment_date, month_year, notes, recorded_by) VALUES (?,?,?,?,?,?,?)");
         $stmt->execute([$student_id, $amount, $type, $pay_date, $month_year ?: null, $notes, $_SESSION['admin_id']]);
 
-        // If monthly payment, update renewal date
-        if ($type === 'monthly') {
-            $student = $pdo->prepare("SELECT renewal_date, status FROM students WHERE id=?");
-            $student->execute([$student_id]);
-            $s = $student->fetch();
-            // Use payment date as base so renewal extends exactly 1 month from when they paid.
-            // Previously used renewal_date as base which caused 2-month extension for new students
-            // (their renewal_date was already set 1 month ahead at registration time).
-            $base = !empty($pay_date) ? $pay_date : date('Y-m-d');
-            $newRenewal = date('Y-m-d', strtotime($base . ' +1 month'));
-            $pdo->prepare("UPDATE students SET renewal_date=?, status='active' WHERE id=?")->execute([$newRenewal, $student_id]);
-        }
+        // For monthly payments: renewal date is managed manually by admin or set at registration.
+        // No auto-extension here — avoids double-counting when admin already set renewal date correctly.
 
         $stu = $pdo->prepare("SELECT full_name FROM students WHERE id=?");
         $stu->execute([$student_id]);
