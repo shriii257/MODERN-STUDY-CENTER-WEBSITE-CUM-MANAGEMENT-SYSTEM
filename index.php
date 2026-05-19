@@ -4,8 +4,8 @@ require_once 'includes/db.php';
 
 // ── Live stats (new schema: seat_type lives on students, not seats) ──
 $totalSeats         = 107;
-$reservedCapacity   = 64;   // guideline ~60%
-$unreservedCapacity = 43;   // guideline ~40%
+$reservedCapacity   = 76;   // max reserved admissions (~71%)
+$unreservedCapacity = 31;   // max unreserved admissions (~29%)
 
 // Count active students by type
 $reservedOccupied  = (int)$pdo->query("SELECT COUNT(*) FROM students WHERE seat_type='reserved'   AND status='active'")->fetchColumn();
@@ -13,9 +13,9 @@ $unreservedActive  = (int)$pdo->query("SELECT COUNT(*) FROM students WHERE seat_
 $reservedFree      = $reservedCapacity   - $reservedOccupied;
 $unreservedFree    = $unreservedCapacity - $unreservedActive;
 
-// Physical seats actually occupied (seats table, status='occupied')
-$physicalOccupied  = (int)$pdo->query("SELECT COUNT(*) FROM seats WHERE status='occupied'")->fetchColumn();
-$available         = $totalSeats - $physicalOccupied;
+// Total occupied = all active students (reserved + unreserved both consume a seat)
+$totalOccupied = $reservedOccupied + $unreservedActive;
+$available     = $totalSeats - $totalOccupied;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -41,14 +41,22 @@ $available         = $totalSeats - $physicalOccupied;
 .announcement-bar{
     width:100%;
     overflow:hidden;
-    background:linear-gradient(90deg,#1a7a2e,#0f5520);
+    background:linear-gradient(90deg,#7b2ff7,#f107a3,#ff6a00,#f107a3,#7b2ff7);
+    background-size:300% 100%;
+    animation:gradientShift 6s ease infinite, scrollAnnouncementBar 0s;
     color:#fff;
     padding:12px 0;
     position:sticky;
     top:0;
     z-index:99999;
-    border-bottom:1px solid rgba(255,255,255,0.08);
-    box-shadow:0 4px 14px rgba(0,0,0,0.18);
+    border-bottom:1px solid rgba(255,255,255,0.15);
+    box-shadow:0 4px 18px rgba(123,47,247,0.35);
+}
+
+@keyframes gradientShift{
+    0%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+    100%{background-position:0% 50%;}
 }
 
 .announcement-track{
@@ -58,6 +66,7 @@ $available         = $totalSeats - $physicalOccupied;
     font-size:14px;
     font-weight:700;
     letter-spacing:0.5px;
+    text-shadow:0 0 12px rgba(255,255,255,0.4);
     animation:scrollAnnouncement 22s linear infinite;
 }
 
@@ -81,7 +90,7 @@ $available         = $totalSeats - $physicalOccupied;
     <a href="#about">About</a>
     <a href="#facilities">Facilities</a>
     <a href="#fees">Fees</a>
-    <a href="#seats"><i class="fas fa-chair me-1"></i>Check Seats</a>
+    <a href="#achievements"><i class="fas fa-trophy me-1"></i>Achievements</a>
     <a href="#contact">Contact</a>
     <a href="student/login.php" class="btn-login"><i class="fas fa-sign-in-alt me-1"></i>Student Login</a>
   </div>
@@ -275,7 +284,8 @@ $available         = $totalSeats - $physicalOccupied;
       <div class="col-md-6 col-lg-4">
         <div class="fee-card h-100">
           <div class="fee-tag">Monthly — Unreserved</div>
-          <div class="fee-price"><sup>₹</sup>1XXX<small>/month</small></div>
+          <div class="fee-price"><sup>₹</sup>1xxx<small>/month</small></div>
+          <p style="font-size:12px;color:var(--text-muted);margin-top:4px;"></p>
           <hr style="margin:20px 0;border-color:var(--border);">
           <ul style="list-style:none;padding:0;margin:0;">
             <?php foreach (['Access to full library','AC reading hall','RO water included','CCTV security','24hr power backup','Any available seat (unreserved)'] as $item): ?>
@@ -292,8 +302,8 @@ $available         = $totalSeats - $physicalOccupied;
         <div class="fee-card featured h-100" style="position:relative;">
           <div style="position:absolute;top:-12px;right:20px;background:var(--accent);color:#fff;padding:4px 14px;border-radius:20px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;"></div>
           <div class="fee-tag">Monthly — Reserved</div>
-          <div class="fee-price"><sup>₹</sup>1XXX<small>/month</small></div>
-          <p style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:4px;">₹1XXX monthly + ₹100 seat reservation</p>
+          <div class="fee-price"><sup>₹</sup>1xxx<small>/month</small></div>
+          <p style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:4px;"></p>
           <hr style="margin:20px 0;border-color:rgba(255,255,255,0.15);">
           <ul style="list-style:none;padding:0;margin:0;">
             <?php foreach (['Your own fixed seat number','No one else can use your seat','All unreserved plan benefits','₹100 extra for seat reservation','Guaranteed seat every visit','Peace of mind'] as $item): ?>
@@ -305,32 +315,45 @@ $available         = $totalSeats - $physicalOccupied;
         </div>
       </div>
 
-      <!-- One-time fees -->
+      <!-- Reserved + Locker Plan -->
       <div class="col-md-6 col-lg-4">
         <div class="fee-card h-100">
-          <div class="fee-tag">One-time Charges</div>
-          <div style="margin-bottom:20px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);">
-              <span style="font-size:14px;font-weight:600;">Registration Fee</span>
-              <span style="font-weight:800;color:var(--primary);font-size:18px;">₹100</span>
-            </div>
-            <div style="font-size:12px;color:var(--text-muted);padding:6px 0 14px;border-bottom:1px solid var(--border);">Non-refundable · paid once at joining</div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);">
-              <span style="font-size:14px;font-weight:600;">Security Deposit</span>
-              <span style="font-weight:800;color:var(--primary);font-size:18px;">₹300</span>
-            </div>
-            <div style="font-size:12px;color:var(--text-muted);padding:6px 0 14px;">Fully refundable when you leave</div>
-          </div>
-          <div style="background:rgba(26,183,89,0.08);border:1px solid rgba(26,183,89,0.2);border-radius:10px;padding:14px;text-align:center;">
-            <div style="font-size:13px;font-weight:700;color:var(--success);">
-              <i class="fas fa-shield-alt me-2"></i>Deposit Fully Refundable
-            </div>
-          </div>
+          <div class="fee-tag">Monthly — Reserved + Locker</div>
+          <div class="fee-price"><sup>₹</sup>2xxx<small>/month</small></div>
+          <p style="font-size:12px;color:var(--text-muted);margin-top:4px;"></p>
+          <hr style="margin:20px 0;border-color:var(--border);">
+          <ul style="list-style:none;padding:0;margin:0;">
+            <?php foreach (['Fixed reserved seat','Personal locker for your belongings','All reserved plan benefits','₹100 extra for locker','Secure storage every day','Maximum peace of mind'] as $item): ?>
+            <li style="padding:7px 0;font-size:14px;color:var(--text-muted);display:flex;align-items:center;gap:10px;">
+              <i class="fas fa-check-circle" style="color:var(--success);"></i><?php echo $item; ?>
+            </li>
+            <?php endforeach; ?>
+          </ul>
         </div>
       </div>
 
     </div>
-    <div class="text-center mt-4">
+
+    <!-- One-time charges note -->
+    <div class="row justify-content-center mt-4">
+      <div class="col-md-10 col-lg-8">
+        <div style="background:var(--bg-page);border:1px solid var(--border);border-radius:12px;padding:20px 24px;">
+          <div style="font-weight:700;font-size:14px;margin-bottom:12px;color:var(--text);"><i class="fas fa-info-circle me-2 text-primary"></i>One-Time Joining Charges (paid only on first month)</div>
+          <div class="row g-2">
+            <div class="col-sm-4" style="font-size:13px;color:var(--text-muted);">
+              <i class="fas fa-file-alt me-2" style="color:var(--primary);"></i>Registration Fee — <strong style="color:var(--text);">₹100</strong> <span style="font-size:11px;">(non-refundable)</span>
+            </div>
+            <div class="col-sm-4" style="font-size:13px;color:var(--text-muted);">
+              <i class="fas fa-shield-alt me-2" style="color:var(--primary);"></i>Security Deposit — <strong style="color:var(--text);">₹xxx</strong> <span style="font-size:11px;">(refundable)</span>
+            </div>
+            <div class="col-sm-4" style="font-size:13px;color:var(--text-muted);">
+              <i class="fas fa-redo me-2" style="color:var(--primary);"></i>From 2nd month — <strong style="color:var(--text);">monthly fee only</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="text-center mt-3">
       <p style="color:var(--text-muted);font-size:13px;">
         <i class="fas fa-info-circle me-2 text-primary"></i>
         All payments are collected directly at the library. No online payment required.
@@ -341,373 +364,72 @@ $available         = $totalSeats - $physicalOccupied;
 
 
 <!-- ============================================================
-     SEAT AVAILABILITY SECTION
+     ACHIEVEMENTS SECTION
      ============================================================ -->
-<section id="seats" style="background:var(--bg-page);padding:60px 0;">
-<style>
-/* ── Stat pills ── */
-.pub-stats-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:24px;}
-.pub-stat-pill{display:flex;align-items:center;gap:8px;background:#fff;border-radius:50px;padding:8px 16px;box-shadow:0 2px 8px rgba(0,0,0,.07);font-size:13px;font-weight:700;border:1.5px solid transparent;}
-.pub-stat-pill.total {border-color:#1a7a2e;color:#1a7a2e;}
-.pub-stat-pill.res   {border-color:#66bb6a;color:#2e7d32;}
-.pub-stat-pill.unres {border-color:#bdbdbd;color:#555;}
-.pub-stat-pill.occ   {border-color:#ef9a9a;color:#c62828;}
-.pub-stat-pill .pill-num{font-size:18px;font-weight:900;line-height:1;}
-
-/* ── Room wrapper ── */
-.room-wrap{
-  background:#fff;
-  border-radius:16px;
-  box-shadow:0 2px 20px rgba(0,0,0,.08);
-  padding:16px;
-  overflow-x:auto;
-  max-width:700px;
-  margin:0 auto;
-}
-.room-inner{
-  min-width:280px;
-  position:relative;
-}
-
-/* ── Door label ── */
-.door-label{
-  text-align:center;
-  font-size:11px;font-weight:700;letter-spacing:1px;
-  color:#aaa;text-transform:uppercase;
-  margin-bottom:6px;
-  display:flex;align-items:center;justify-content:center;gap:6px;
-}
-.door-label::before,.door-label::after{content:'';flex:1;height:1px;background:#e0e0e0;}
-
-/* ── Cabin block (pair of facing rows) ── */
-.cabin-block{
-  display:grid;
-  grid-template-columns:1fr 4px 1fr;
-  gap:0 6px;
-  margin-bottom:3px;
-}
-.cabin-block.has-aisle{margin-bottom:14px;}
-
-/* aisle divider */
-.aisle-div{width:4px;background:rgba(0,0,0,0.06);border-radius:4px;margin:2px 0;}
-
-/* ── Seat row ── */
-.seat-row{display:flex;gap:3px;justify-content:flex-end;}
-.seat-row.right{justify-content:flex-start;}
-
-/* ── Single seat ── */
-.pub-seat{
-  width:36px;height:36px;
-  border-radius:6px;
-  display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  font-size:9px;font-weight:800;
-  cursor:pointer;
-  border:1.5px solid transparent;
-  transition:transform .12s,box-shadow .12s;
-  line-height:1;
-  gap:1px;
-  position:relative;
-}
-.pub-seat:hover{transform:scale(1.15);box-shadow:0 4px 12px rgba(0,0,0,.22);z-index:5;}
-.pub-seat i{font-size:11px;}
-
-.pub-seat.res-avail   {background:#e8f5e9;border-color:#66bb6a;color:#2e7d32;}
-.pub-seat.res-occ     {background:#ffebee;border-color:#ef5350;color:#c62828;cursor:not-allowed;}
-.pub-seat.unres-avail {background:#f5f5f5;border-color:#bdbdbd;color:#555;}
-.pub-seat.unres-occ   {background:#fff8e1;border-color:#ffca28;color:#e65100;cursor:not-allowed;}
-
-/* ── Window label ── */
-.window-label{
-  font-size:10px;font-weight:700;color:#aaa;letter-spacing:1px;
-  text-transform:uppercase;text-align:center;
-  padding:8px 0 4px;
-  border-top:1px dashed #e0e0e0;
-  border-bottom:1px dashed #e0e0e0;
-  margin:6px 0;
-}
-
-/* ── AC labels ── */
-.ac-row{display:grid;grid-template-columns:1fr 4px 1fr;gap:0 6px;margin-top:10px;}
-.ac-label{background:#e3f0ff;border-radius:8px;text-align:center;padding:6px;font-size:10px;font-weight:800;color:#1a7a2e;letter-spacing:.5px;}
-
-/* ── Legend ── */
-.pub-legend{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:16px;}
-.pub-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:#555;}
-.pub-legend-dot{width:12px;height:12px;border-radius:3px;border:1.5px solid transparent;}
-.pub-legend-dot.g{background:#e8f5e9;border-color:#66bb6a;}
-.pub-legend-dot.r{background:#ffebee;border-color:#ef5350;}
-.pub-legend-dot.gy{background:#f5f5f5;border-color:#bdbdbd;}
-.pub-legend-dot.y{background:#fff8e1;border-color:#ffca28;}
-
-@media(max-width:420px){
-  .pub-seat{width:30px;height:30px;font-size:8px;}
-  .pub-seat i{font-size:9px;}
-  .room-wrap{padding:10px;}
-}
-</style>
-
+<section id="achievements" style="background:var(--bg-page);padding:70px 0;">
   <div class="container">
-    <div class="text-center mb-4">
-      <div class="section-tag"><i class="fas fa-chair"></i> Live Seat Status</div>
-      <h2 class="section-title">Check Available Seats</h2>
-      <p class="section-sub mx-auto" style="font-size:14px;">Tap any seat to request it from the admin</p>
+    <div class="text-center mb-5">
+      <div class="section-tag"><i class="fas fa-trophy"></i> Our Achievements</div>
+      <h2 class="section-title">Ekagra Abhyasika Achievements</h2>
+      <p class="section-sub mx-auto">Proud results of our students' hard work and dedication.</p>
     </div>
 
-    <?php
-    // Fetch all 107 physical seats
-    $pubSeats = $pdo->query("SELECT seat_number, seat_type, status FROM seats ORDER BY seat_number")->fetchAll();
-    $seatMap = [];
-    foreach ($pubSeats as $ps) $seatMap[$ps['seat_number']] = $ps;
-
-    // Stats: use student-based counts (seat_type on students, not seats)
-    // Reserved free = capacity - active reserved students
-    // Unreserved students = active unreserved students
-    $mapResOcc    = $reservedOccupied;   // from top of page
-    $mapUnresAct  = $unreservedActive;   // from top of page
-    $mapResFree   = $reservedFree;       // capacity - taken
-    $mapTotalOcc  = $physicalOccupied;
-    $mapTotalAvail= $available;
-
-    // Helper: render a single seat
-    // seat_type on seats table is NULL when free, 'reserved' when a student is assigned
-    function pubSeat($seatMap, $n) {
-        if (!isset($seatMap[$n])) {
-            // Seat exists in layout but not in DB — show as available
-            return "<div class='pub-seat res-avail'><i class='fas fa-chair'></i>$n</div>";
-        }
-        $s   = $seatMap[$n];
-        $occ = ($s['status'] === 'occupied');
-        // When occupied, seat_type tells us reserved vs unreserved
-        // When free, seat_type is NULL (no student assigned)
-        $res = ($s['seat_type'] === 'reserved');
-        if ($occ) {
-            $cls  = $res ? 'res-occ' : 'unres-occ';
-            $icon = 'fa-user';
-            $data = htmlspecialchars(json_encode(['seat_number'=>$n,'seat_type'=>'Reserved','status'=>'occupied']));
-            return "<div class='pub-seat $cls' data-seat='$data' onclick='openPubSeatModal(this)' title='Seat $n — Occupied'>
-                      <i class='fas $icon'></i>$n
-                    </div>";
-        } else {
-            // Free seat (seat_type is NULL) — show as available/reservable
-            $cls  = 'res-avail';
-            $icon = 'fa-chair';
-            $data = htmlspecialchars(json_encode(['seat_number'=>$n,'seat_type'=>'Reserved','status'=>'available']));
-            return "<div class='pub-seat $cls' data-seat='$data' onclick='openPubSeatModal(this)' title='Seat $n — Free'>
-                      <i class='fas $icon'></i>$n
-                    </div>";
-        }
-    }
-
-    // Helper: render a row of seats
-    function pubRow($seatMap, $nums, $dir='left') {
-        $cls = $dir==='right' ? 'seat-row right' : 'seat-row';
-        $html = "<div class='$cls'>";
-        foreach ($nums as $n) $html .= pubSeat($seatMap, $n);
-        $html .= "</div>";
-        return $html;
-    }
-    ?>
-
-    <!-- Stats pills -->
-    <div class="pub-stats-row">
-      <div class="pub-stat-pill total"><span class="pill-num"><?php echo $mapTotalAvail; ?></span> Seats Free</div>
-      <div class="pub-stat-pill res"><span class="pill-num"><?php echo $mapResOcc; ?>/<?php echo $reservedCapacity; ?></span> Reserved Taken</div>
-      <div class="pub-stat-pill unres"><span class="pill-num"><?php echo $mapUnresAct; ?></span> Unreserved Students</div>
-      <div class="pub-stat-pill occ"><span class="pill-num"><?php echo $mapTotalOcc; ?></span> Occupied</div>
-    </div>
-
-    <!-- Legend -->
-    <div class="pub-legend">
-      <div class="pub-legend-item"><div class="pub-legend-dot g"></div>Available — Tap to Enquire</div>
-      <div class="pub-legend-item"><div class="pub-legend-dot r"></div>Reserved — Taken</div>
-      <div class="pub-legend-item"><div class="pub-legend-dot y"></div>Unreserved — Taken</div>
-    </div>
-
-    <!-- Room map -->
-    <div class="room-wrap">
-      <div class="room-inner">
-
-        <!-- Door -->
-        <div class="door-label"><i class="fas fa-door-open"></i> DOOR / ENTRANCE</div>
-
-        <!-- Block 1: Seats 1–18 & 5–14 -->
-        <div class="cabin-block">
-          <div>
-            <?php echo pubRow($seatMap,[1,2,3,4],'left'); ?>
-            <?php echo pubRow($seatMap,[18,17,16,15],'left'); ?>
-          </div>
-          <div class="aisle-div"></div>
-          <div>
-            <?php echo pubRow($seatMap,[5,6,7,8,9],'right'); ?>
-            <?php echo pubRow($seatMap,[14,13,12,11,10],'right'); ?>
-          </div>
-        </div>
-
-        <!-- Block 2: Seats 19–34 & 23–32 -->
-        <div class="cabin-block">
-          <div>
-            <?php echo pubRow($seatMap,[19,20,21,22],'left'); ?>
-            <?php echo pubRow($seatMap,[33,34,35,36],'left'); ?>
-          </div>
-          <div class="aisle-div"></div>
-          <div>
-            <?php echo pubRow($seatMap,[23,24,25,26,27],'right'); ?>
-            <?php echo pubRow($seatMap,[32,31,30,29,28],'right'); ?>
-          </div>
-        </div>
-
-        <!-- Block 3: Seats 37–54 & 41–50 -->
-        <div class="cabin-block">
-          <div>
-            <?php echo pubRow($seatMap,[37,38,39,40],'left'); ?>
-            <?php echo pubRow($seatMap,[54,53,52,51],'left'); ?>
-          </div>
-          <div class="aisle-div"></div>
-          <div>
-            <?php echo pubRow($seatMap,[41,42,43,44,45],'right'); ?>
-            <?php echo pubRow($seatMap,[50,49,48,47,46],'right'); ?>
-          </div>
-        </div>
-
-        <!-- Block 4: Seats 55–72 & 59–68 -->
-        <div class="cabin-block has-aisle">
-          <div>
-            <?php echo pubRow($seatMap,[55,56,57,58],'left'); ?>
-            <?php echo pubRow($seatMap,[72,71,70,69],'left'); ?>
-          </div>
-          <div class="aisle-div"></div>
-          <div>
-            <?php echo pubRow($seatMap,[59,60,61,62,63],'right'); ?>
-            <?php echo pubRow($seatMap,[68,67,66,65,64],'right'); ?>
-          </div>
-        </div>
-
-        <!-- Window divider -->
-        <div class="window-label"><i class="fas fa-wind me-1"></i> WINDOW / AISLE</div>
-
-        <!-- Block 5: Seats 73–90 & 77–86 -->
-        <div class="cabin-block">
-          <div>
-            <?php echo pubRow($seatMap,[73,74,75,76],'left'); ?>
-            <?php echo pubRow($seatMap,[90,89,88,87],'left'); ?>
-          </div>
-          <div class="aisle-div"></div>
-          <div>
-            <?php echo pubRow($seatMap,[77,78,79,80,81],'right'); ?>
-            <?php echo pubRow($seatMap,[86,85,84,83,82],'right'); ?>
-          </div>
-        </div>
-
-       
-        <div class="cabin-block">
-          <div>
-            <?php echo pubRow($seatMap,[91,92,93,94],'left'); ?>
-            <?php echo pubRow($seatMap,[107,106,105],'left'); ?>
-          </div>
-          <div class="aisle-div"></div>
-          <div>
-            <?php echo pubRow($seatMap,[95,96,97,98,99],'right'); ?>
-            <?php echo pubRow($seatMap,[104,103,102,101,100],'right'); ?>
-          </div>
-        </div>
-
-        <!-- AC labels -->
-        <div class="ac-row">
-          <div class="ac-label"><i class="fas fa-snowflake me-1"></i>AC</div>
-          <div></div>
-          <div class="ac-label"><i class="fas fa-snowflake me-1"></i>Air Conditioner</div>
-        </div>
-
+    <!-- Big highlight stat -->
+    <div style="max-width:780px;margin:0 auto 48px;background:linear-gradient(135deg,#1a7a2e 0%,#2ea84a 100%);border-radius:20px;padding:40px 32px;text-align:center;box-shadow:0 12px 40px rgba(26,122,46,0.25);position:relative;overflow:hidden;">
+      <div style="position:absolute;top:-30px;right:-30px;font-size:160px;opacity:0.07;line-height:1;">🏆</div>
+      <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.75);margin-bottom:10px;">Government Sector Selections</div>
+      <div style="font-size:88px;font-weight:900;color:#fff;line-height:1;font-family:'Rajdhani',sans-serif;letter-spacing:-2px;">105</div>
+      <div style="font-size:20px;font-weight:700;color:rgba(255,255,255,0.92);margin-top:6px;">Students Selected in Government Jobs</div>
+      <div style="margin-top:18px;display:inline-block;background:rgba(255,255,255,0.15);border-radius:50px;padding:8px 24px;">
+        <span style="font-size:13px;color:#fff;font-weight:600;"><i class="fas fa-star me-2" style="color:#ffd600;"></i>Police · Banking · Railways · PSC · SSC &amp; more</span>
       </div>
-    </div><!-- /room-wrap -->
+    </div>
 
-    <p class="text-center mt-3" style="font-size:12px;color:#aaa;">
-      <i class="fas fa-sync-alt me-1"></i>Refreshes on page load · Tap an available seat to contact admin
-    </p>
-
-    <!-- Unreserved info box -->
-    <div style="max-width:700px;margin:16px auto 0;background:#f0f7ff;border:1.5px solid #b3d0f5;border-radius:12px;padding:16px 20px;display:flex;align-items:flex-start;gap:14px;">
-      <i class="fas fa-door-open" style="color:#1a7a2e;font-size:22px;margin-top:2px;flex-shrink:0;"></i>
-      <div>
-        <div style="font-weight:700;font-size:14px;color:#1a7a2e;margin-bottom:4px;">Unreserved (General) Access</div>
-        <div style="font-size:13px;color:#555;line-height:1.5;">
-          Don't need a fixed seat? Choose our <strong>Unreserved plan at ₹1800/month</strong> — sit anywhere that's free each day.
-          <a href="https://wa.me/917709497762?text=<?php echo rawurlencode('Hello! I am interested in Unreserved (General) access at Ekagra Abhyasika. Please guide me.'); ?>"
-             target="_blank" style="color:#1a7a2e;font-weight:700;text-decoration:underline;margin-left:4px;">Enquire on WhatsApp →</a>
+    <!-- Supporting stat cards -->
+    <div class="row g-4 justify-content-center">
+      <div class="col-sm-6 col-lg-4">
+        <div style="background:#fff;border-radius:16px;padding:28px 24px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.07);border:1.5px solid var(--border);height:100%;">
+          <div style="width:56px;height:56px;background:rgba(26,122,46,0.1);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+            <i class="fas fa-user-graduate" style="font-size:24px;color:var(--primary);"></i>
+          </div>
+          <div style="font-size:42px;font-weight:900;color:var(--primary);font-family:'Rajdhani',sans-serif;line-height:1;">105+</div>
+          <div style="font-size:14px;font-weight:700;color:var(--text);margin-top:6px;">Government Job Selections</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Across various departments &amp; boards</div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-lg-4">
+        <div style="background:#fff;border-radius:16px;padding:28px 24px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.07);border:1.5px solid var(--border);height:100%;">
+          <div style="width:56px;height:56px;background:rgba(26,122,46,0.1);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+            <i class="fas fa-building" style="font-size:24px;color:var(--primary);"></i>
+          </div>
+          <div style="font-size:42px;font-weight:900;color:var(--primary);font-family:'Rajdhani',sans-serif;line-height:1;">107</div>
+          <div style="font-size:14px;font-weight:700;color:var(--text);margin-top:6px;">Total Library Seats</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">AC reading hall, individual cabins</div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-lg-4">
+        <div style="background:#fff;border-radius:16px;padding:28px 24px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.07);border:1.5px solid var(--border);height:100%;">
+          <div style="width:56px;height:56px;background:rgba(26,122,46,0.1);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+            <i class="fas fa-clock" style="font-size:24px;color:var(--primary);"></i>
+          </div>
+          <div style="font-size:42px;font-weight:900;color:var(--primary);font-family:'Rajdhani',sans-serif;line-height:1;">16hr</div>
+          <div style="font-size:14px;font-weight:700;color:var(--text);margin-top:6px;">Open Daily</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">6:00 AM – 10:00 PM, 7 days a week</div>
         </div>
       </div>
     </div>
 
-  </div><!-- /container -->
-</section>
-
-<!-- ── Seat Request Modal ── -->
-<div class="modal fade" id="pubSeatModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content" style="border-radius:16px;border:none;box-shadow:0 20px 60px rgba(0,0,0,.18);">
-      <div class="modal-header" style="border-bottom:1px solid #f0f0f0;padding:18px 20px;">
-        <h5 class="modal-title" style="font-size:15px;"><i class="fas fa-chair me-2" style="color:#1a7a2e;"></i>Seat Request</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body" style="padding:20px;">
-        <div id="pubModalAvailable">
-          <p style="font-size:13px;color:#555;margin-bottom:10px;">You selected:</p>
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-            <span id="pubModalSeatNo" style="background:#1a7a2e;color:#fff;border-radius:8px;padding:4px 14px;font-weight:900;font-family:'Rajdhani',sans-serif;font-size:22px;">–</span>
-            <div>
-              <div id="pubModalSeatType" style="font-weight:700;font-size:14px;"></div>
-              <div style="font-size:12px;color:#1ab759;font-weight:600;"><i class="fas fa-circle" style="font-size:7px;"></i> Available</div>
-            </div>
-          </div>
-          <p style="font-size:13px;color:#666;margin-bottom:16px;">Contact admin with your name and seat number to confirm admission.</p>
-          <a id="pubWaLink" href="#" target="_blank"
-             style="background:#25d366;color:#fff;border-radius:10px;padding:11px 20px;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;margin-bottom:8px;">
-            <i class="fab fa-whatsapp fa-lg"></i> Request via WhatsApp
-          </a>
-          <a href="tel:+917709497762"
-             style="background:#1a7a2e;color:#fff;border-radius:10px;padding:11px 20px;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">
-            <i class="fas fa-phone"></i> Call Admin
-          </a>
-        </div>
-        <div id="pubModalOccupied" style="display:none;text-align:center;padding:8px 0;">
-          <i class="fas fa-user-times" style="font-size:36px;color:#ef5350;margin-bottom:12px;"></i>
-          <div style="font-weight:700;font-size:16px;margin-bottom:6px;">Seat <span id="pubModalOccNo"></span> is Occupied</div>
-          <p style="font-size:13px;color:#888;margin-bottom:16px;">Choose another available seat from the map.</p>
-          <a id="pubWaAnyLink" href="#" target="_blank"
-             style="background:#25d366;color:#fff;border-radius:10px;padding:11px 20px;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">
-            <i class="fab fa-whatsapp fa-lg"></i> Ask Admin for Any Seat
-          </a>
-        </div>
-      </div>
+    <!-- Motivational footer line -->
+    <div class="text-center mt-5">
+      <p style="font-size:15px;color:var(--text-muted);max-width:520px;margin:0 auto;">
+        <i class="fas fa-quote-left me-2 text-primary" style="opacity:0.4;"></i>
+        Your success story could be next. Join Ekagra Abhyasika and study in the right environment.
+        <i class="fas fa-quote-right ms-2 text-primary" style="opacity:0.4;"></i>
+      </p>
     </div>
   </div>
-</div>
+</section>
 
-<script>
-(function(){
-  var ADMIN = '917709497762';
-  window.openPubSeatModal = function(el){
-    var d = JSON.parse(el.dataset.seat);
-    var m = new bootstrap.Modal(document.getElementById('pubSeatModal'));
-    if(d.status==='available'){
-      document.getElementById('pubModalAvailable').style.display='';
-      document.getElementById('pubModalOccupied').style.display='none';
-      document.getElementById('pubModalSeatNo').textContent='Seat '+d.seat_number;
-      document.getElementById('pubModalSeatType').textContent=d.seat_type+' Seat';
-      var msg=encodeURIComponent('Hello! I want to book Seat No. '+d.seat_number+' ('+d.seat_type+') at Ekagra Abhyasika. Please guide me on the admission process.');
-      document.getElementById('pubWaLink').href='https://wa.me/'+ADMIN+'?text='+msg;
-    } else {
-      document.getElementById('pubModalAvailable').style.display='none';
-      document.getElementById('pubModalOccupied').style.display='';
-      document.getElementById('pubModalOccNo').textContent=d.seat_number;
-      var msg2=encodeURIComponent('Hello! I am looking for an available seat at Ekagra Abhyasika. Can you help?');
-      document.getElementById('pubWaAnyLink').href='https://wa.me/'+ADMIN+'?text='+msg2;
-    }
-    m.show();
-  };
-})();
-</script>
 
 <!-- ============================================================
      CONTACT SECTION
@@ -831,8 +553,57 @@ $available         = $totalSeats - $physicalOccupied;
          Admin
       </a>
     </p>
+
+    <!-- Visitor Counter -->
+    <p class="visitor-counter-wrap">
+      <span class="visitor-counter-badge">
+        <i class="fa fa-users" aria-hidden="true"></i>
+        &nbsp;<?php echo number_format($totalVisitors); ?> Visitors
+      </span>
+    </p>
+
   </div>
 </footer>
+
+<style>
+/* ── Silver metallic effect for @shribiradar ── */
+.crystal-handle {
+  position: relative;
+  display: inline-block;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.8px;
+  text-decoration: none;
+  background: linear-gradient(135deg, #e8e8e8 0%, #ffffff 30%, #c0c0c0 50%, #ffffff 70%, #e8e8e8 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: silverSheen 3s ease-in-out infinite;
+  transition: animation-duration 0.3s;
+}
+
+.crystal-handle::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+  animation: silverSheen 3s ease-in-out infinite;
+}
+
+.crystal-handle:hover {
+  animation: silverSheen 1s ease-in-out infinite;
+}
+
+@keyframes silverSheen {
+  0%   { background-position: 100% 0%; }
+  50%  { background-position: 0% 100%; }
+  100% { background-position: 100% 0%; }
+}
+</style>
 
 <!-- Floating Buttons -->
 <div class="floating-btns">
