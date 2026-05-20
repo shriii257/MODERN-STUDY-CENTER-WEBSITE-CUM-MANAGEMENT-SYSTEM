@@ -134,6 +134,16 @@ $available     = $totalSeats - $totalOccupied;
             <div class="hero-stat-label">Days a Week</div>
           </div>
         </div>
+        <!-- Google Rating Badge -->
+        <a href="https://maps.google.com/?q=Ekagra+Abhyasika+Undri+Pune" target="_blank" class="google-rating-badge" title="See our Google reviews">
+          <img src="https://www.google.com/favicon.ico" alt="Google" width="15" height="15" style="border-radius:2px;flex-shrink:0;">
+          <span class="gr-label">Google Rating</span>
+          <span class="gr-stars">
+            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
+          </span>
+          <span class="gr-score">4.8</span>
+          <span class="gr-count">(120+ reviews)</span>
+        </a>
       </div>
 
       <!-- Live seat availability card -->
@@ -361,6 +371,16 @@ $available     = $totalSeats - $totalOccupied;
     </div>
   </div>
 </section>
+
+<!-- Google Reviews Button -->
+<div class="text-center" style="padding:40px 0;">
+  <a href="https://maps.google.com/?q=Ekagra+Abhyasika+Undri+Pune" target="_blank" class="ea-google-review-btn">
+    <img src="https://www.google.com/favicon.ico" width="18" height="18" alt="Google">
+    <span>Read all reviews on Google</span>
+    <i class="fas fa-arrow-right" style="color:var(--primary);"></i>
+  </a>
+</div>
+
 
 
 <!-- ============================================================
@@ -618,5 +638,7 @@ $available     = $totalSeats - $totalOccupied;
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="assets/js/main.js"></script>
+
+
 </body>
 </html>
