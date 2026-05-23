@@ -283,7 +283,7 @@ $statusColor = match($student['status']) {
               'Maintain complete silence',
               'Mobile on silent/vibrate mode',
               'Keep study area clean',
-              'Carry ID card at all times',
+              'Don't misbehave with anyone',
               'Food & beverages not allowed inside',
               'Reserved seats are exclusively assigned',
               'Entry only during library hours',
