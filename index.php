@@ -543,7 +543,7 @@ $available     = $totalSeats - $totalOccupied;
         'Reserved seats cannot be used by other students',
         'Entry is permitted only during library hours (6 AM–10 PM)',
         'Food and beverages are not allowed inside the reading hall',
-        'ID card must be carried at all times',
+        'Don't misbehave with anyone',
         'Violation of rules may result in membership cancellation',
       ];
       foreach ($rules as $i => $rule): ?>
